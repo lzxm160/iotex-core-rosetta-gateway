@@ -17,7 +17,7 @@ import "github.com/coinbase/rosetta-sdk-go/types"
 // IoTexCurrency is the currency used on the IoTex blockchain.
 var IoTexCurrency = &types.Currency{
 	Symbol:   "IoTex",
-	Decimals: 1e18,
+	Decimals: 18,
 }
 
 //

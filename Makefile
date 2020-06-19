@@ -43,7 +43,7 @@ default: build
 all: clean build test
 
 .PHONY: build
-build: 
+build:
 	$(GOBUILD) -o ./$(BUILD_TARGET_SERVER) .
 
 .PHONY: fmt
