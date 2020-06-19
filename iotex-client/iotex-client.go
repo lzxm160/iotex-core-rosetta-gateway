@@ -235,6 +235,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
+	fmt.Println("after client.GetActions")
 	ret = make([]*types.Transaction, 0)
 	for _, act := range res.ActionInfo {
 		transfer := act.GetAction().GetCore().GetTransfer()
