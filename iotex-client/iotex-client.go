@@ -151,11 +151,15 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	}
 	fmt.Println(parentHeight, height)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	count := uint64(2)
+	if parentHeight == uint64(height) {
+		count = 1
+	}
 	request := &iotexapi.GetBlockMetasRequest{
 		Lookup: &iotexapi.GetBlockMetasRequest_ByIndex{
 			ByIndex: &iotexapi.GetBlockMetasByIndexRequest{
 				Start: parentHeight,
-				Count: 2,
+				Count: count,
 			},
 		},
 	}

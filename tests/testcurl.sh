@@ -19,8 +19,4 @@ response:
     "network_identifier": {
         "blockchain": "IoTex",
         "network": "mainnet"},
-    "block_identifier": {
-        "index": 1123941,
-        "hash": "0x1f2cc6c5027d2f201a5453ad1119574d2aed23a392654742ac3c78783c071f85"
-    }
-}' http://127.0.0.1:8080/block
+    "block_identifier": {"index": 1123941}}' http://127.0.0.1:8080/block
