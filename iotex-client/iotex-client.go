@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -220,24 +219,31 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-	request := &iotexapi.GetActionsRequest{
-		Lookup: &iotexapi.GetActionsRequest_ByBlk{
-			ByBlk: &iotexapi.GetActionsByBlockRequest{
-				BlkHash: blk.Hash,
-				Start:   1,
-				Count:   math.MaxUint32,
-			},
-		},
-	}
 	c.reconnect(ctx)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	res, err := client.GetActions(context.Background(), request)
-	if err != nil {
-		return
+	fmt.Println("before client.GetActions")
+	limit := uint64(1000)
+	var actionInfo []*iotexapi.ActionInfo
+	for i := uint64(0); ; i++ {
+		request := &iotexapi.GetActionsRequest{
+			Lookup: &iotexapi.GetActionsRequest_ByBlk{
+				ByBlk: &iotexapi.GetActionsByBlockRequest{
+					BlkHash: blk.Hash,
+					Start:   i * limit,
+					Count:   limit,
+				},
+			},
+		}
+		res, err := client.GetActions(context.Background(), request)
+		if err != nil {
+			break
+		}
+		actionInfo = append(actionInfo, res.ActionInfo...)
 	}
+
 	fmt.Println("after client.GetActions")
 	ret = make([]*types.Transaction, 0)
-	for _, act := range res.ActionInfo {
+	for _, act := range actionInfo {
 		transfer := act.GetAction().GetCore().GetTransfer()
 		if transfer == nil {
 			continue
