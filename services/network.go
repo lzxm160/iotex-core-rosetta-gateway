@@ -28,8 +28,8 @@ func (s *networkAPIService) NetworkList(
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
 			&types.NetworkIdentifier{
-				Blockchain: "IoTex",
-				Network:    "1",
+				Blockchain: BlockchainName,
+				Network:    chainID,
 			},
 		},
 	}, nil

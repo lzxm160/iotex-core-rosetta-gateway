@@ -21,6 +21,7 @@ import (
 // BlockchainName is the name of the IoTex blockchain.
 const (
 	BlockchainName = "IoTex"
+	Symbol         = "IoTex"
 	chainID        = "mainnet"
 )
 
