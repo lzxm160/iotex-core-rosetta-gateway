@@ -25,15 +25,17 @@ curl -X POST --data '{
 
 curl -X POST --data '{
     "network_identifier": {
-        "blockchain": "bitcoin",
-        "network": "mainnet",
-        "sub_network_identifier": {
-            "network": "shard 1",
-            "metadata": {
-                "producer": "0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5"
-            }
-        }
+        "blockchain": "IoTex",
+        "network": "mainnet"
     },
-    "options": {}
+    "options": {"id":"io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"}
 }' http://127.0.0.1:8080/construction/metadata
+#response:
+#{"metadata":{"nonce":{"Nonce":0,"Balance":"12000000000000000000"}}}
 
+curl -X POST --data '{
+    "network_identifier": {
+        "blockchain": "IoTex",
+        "network": "mainnet"},
+    "signed_transaction": "string"
+}' http://127.0.0.1:8080/construction/submit
