@@ -43,6 +43,7 @@ var IoTexCurrency = &types.Currency{
 // ValidateNetworkIdentifier validates the network identifier.
 func ValidateNetworkIdentifier(ctx context.Context, c ic.IoTexClient, ni *types.NetworkIdentifier) *types.Error {
 	if ni != nil {
+		fmt.Println("ni != nil")
 		if ni.Blockchain != BlockchainName {
 			return ErrInvalidBlockchain
 		}
@@ -50,7 +51,9 @@ func ValidateNetworkIdentifier(ctx context.Context, c ic.IoTexClient, ni *types.
 			fmt.Println("ni.SubNetworkIdentifier != nil")
 			return ErrInvalidSubnetwork
 		}
+		fmt.Println("ni.Network chainID")
 		if ni.Network != chainID {
+			fmt.Println("ni.Network != chainID")
 			return ErrInvalidNetwork
 		}
 	} else {
