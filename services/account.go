@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -33,7 +34,7 @@ func (s *accountAPIService) AccountBalance(
 	if err != nil {
 		return nil, ErrUnableToGetAccount
 	}
-
+	fmt.Println("AccountBalance")
 	blk, err := s.client.GetLatestBlock(ctx)
 	if err != nil {
 		return nil, ErrUnableToGetBlk
