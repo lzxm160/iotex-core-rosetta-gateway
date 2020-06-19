@@ -19,14 +19,6 @@ ROSETTA_CLI_RELEASE=0.2.4
 MAGENTA = ""
 OFF = ""
 
-V ?= 0
-ifeq ($(V),0)
-	ECHO_V = @
-else
-	VERBOSITY_FLAG = -v
-	DEBUG_FLAG = -debug
-endif
-
 HAVE_WGET := $(shell which wget > /dev/null && echo 1)
 ifdef HAVE_WGET
     DOWNLOAD := wget --quiet --show-progress --progress=bar:force:noscroll -O
@@ -45,7 +37,7 @@ all: clean build test
 .PHONY: build
 build:
 	$(GOBUILD) -o ./$(BUILD_TARGET_SERVER) .
-
+    @export IoTexChainPoint=api.testnet.iotex.one:80
 .PHONY: fmt
 fmt:
 	$(GOCMD) fmt ./...
@@ -60,17 +52,24 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
-.PHONY: test
-test: build tests/rosetta-cli
+.PHONY: test2
+test2: build tests/rosetta-cli
 	@echo "Running tests...\n"
-	$(ECHO_V)./tests/test.sh
+	@chmod +x ./tests/test.sh
+	@./tests/test.sh
+
+.PHONY: test
+test:
+	@echo "Running tests...\n"
+	@chmod +x ./tests/testcurl.sh
+	@./tests/testcurl.sh
 
 .PHONY: clean
 clean:
 	@echo "Cleaning..."
-	$(ECHO_V)rm -rf ./tests/rosetta-cli.tar.gz tests/rosetta-cli
-	$(ECHO_V)rm -rf ./$(BUILD_TARGET_SERVER)
-	$(ECHO_V)rm -rf $(COV_REPORT) $(COV_HTML) $(LINT_LOG)
-	$(ECHO_V)find . -name $(COV_OUT) -delete
-	$(ECHO_V)find . -name $(TESTBED_COV_OUT) -delete
-	$(ECHO_V)$(GOCLEAN) -i $(PKGS)
+	@rm -rf ./tests/rosetta-cli.tar.gz tests/rosetta-cli
+	@rm -rf ./$(BUILD_TARGET_SERVER)
+	@rm -rf $(COV_REPORT) $(COV_HTML) $(LINT_LOG)
+	@find . -name $(COV_OUT) -delete
+	@find . -name $(TESTBED_COV_OUT) -delete
+	@$(GOCLEAN) -i $(PKGS)
