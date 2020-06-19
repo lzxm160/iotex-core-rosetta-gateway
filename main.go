@@ -64,7 +64,7 @@ func main() {
 
 	// Start the server.
 	router := NewBlockchainRouter(client)
-	err = http.ListenAndServe(port, router)
+	err = http.ListenAndServe("0.0.0.0:"+port, router)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Oasis Rosetta Gateway server exited with error: %v\n", err)
 		os.Exit(1)
