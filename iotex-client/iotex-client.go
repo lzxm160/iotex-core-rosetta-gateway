@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -104,7 +105,7 @@ type grpcIoTexClient struct {
 
 // NewIoTexClient returns an implementation of IoTexClient
 func NewIoTexClient(grpcAddr string) (cli IoTexClient, err error) {
-	grpc, err := NewDefaultGRPCConn(grpcAddr)
+	grpc, err := newDefaultGRPCConn(grpcAddr)
 	if err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	} else {
 		parentHeight = uint64(height) - 1
 	}
-
+	fmt.Println(parentHeight, height)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	request := &iotexapi.GetBlockMetasRequest{
 		Lookup: &iotexapi.GetBlockMetasRequest_ByIndex{
@@ -170,6 +171,7 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	if len(resp.BlkMetas) == 2 {
 		blk = resp.BlkMetas[1]
 		parentBlk = resp.BlkMetas[0]
+		fmt.Println("len(resp.BlkMetas) == 2")
 	} else {
 		blk = resp.BlkMetas[0]
 		parentBlk = resp.BlkMetas[0]
@@ -273,38 +275,6 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	return
 }
 
-//func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error) {
-//	conn, err := oc.connect(ctx)
-//	if err != nil {
-//		return nil, err
-//	}
-//	client := staking.NewStakingClient(conn)
-//	evts, err := client.GetEvents(ctx, height)
-//	if err != nil {
-//		return nil, err
-//	}
-//	// Change empty hashes to block hashes, as they belong to block events.
-//	var gotBlkHash bool
-//	var blkHash []byte
-//	for i := range evts {
-//		e := &evts[i]
-//		if e.TxHash.IsEmpty() {
-//			if !gotBlkHash {
-//				// First time, need to fetch the block hash.
-//				conClient := consensus.NewConsensusClient(conn)
-//				blk, err := conClient.GetBlock(ctx, height)
-//				if err != nil {
-//					return nil, err
-//				}
-//				blkHash = blk.Hash
-//				gotBlkHash = true
-//			}
-//			copy(e.TxHash[:], blkHash)
-//		}
-//	}
-//	return evts, nil
-//}
-//
 func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error) {
 	c.reconnect(ctx)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
@@ -316,38 +286,20 @@ func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (
 	return
 }
 
-//
-//func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
-//	conn, err := oc.connect(ctx)
-//	if err != nil {
-//		return 0, err
-//	}
-//	client := consensus.NewConsensusClient(conn)
-//	return client.GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
-//		AccountAddress: addr,
-//		Height:         height,
-//	})
-//}
-//
 func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error) {
 	c.reconnect(ctx)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	return client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
 }
+
 func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error) {
 	c.reconnect(ctx)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	return client.GetServerMeta(context.Background(), nil)
 }
 
-//
-//// New creates a new Oasis gRPC client.
-//func New() (OasisClient, error) {
-//	return &grpcOasisClient{}, nil
-//}
-
-// NewDefaultGRPCConn creates a default grpc connection. With tls and retry.
-func NewDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
+// newDefaultGRPCConn creates a default grpc connection. With tls and retry.
+func newDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
 	opts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(10 * time.Second)),
 		grpc_retry.WithMax(3),
