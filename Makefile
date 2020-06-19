@@ -37,8 +37,6 @@ all: clean build test
 .PHONY: build
 build:
 	$(GOBUILD) -o ./$(BUILD_TARGET_SERVER) .
-    @export IoTexChainPoint=api.testnet.iotex.one:80
-    ./$(BUILD_TARGET_SERVER)
 
 .PHONY: fmt
 fmt:
