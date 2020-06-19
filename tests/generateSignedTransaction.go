@@ -1,14 +1,13 @@
 package main
 
 import (
-	"crypto"
 	"encoding/hex"
 	"flag"
 	"fmt"
 	"math/big"
 
 	"github.com/gogo/protobuf/proto"
-
+	"github.com/iotexproject/go-pkgs/crypto"
 	"github.com/pkg/errors"
 
 	"github.com/iotexproject/iotex-antenna-go/v2/account"
