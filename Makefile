@@ -36,7 +36,7 @@ ifdef HAVE_CURL
     DOWNLOAD := curl --progress-bar --location -o
 else
     $(error Please install wget or curl)
-
+endif
 default: build
 all: clean build test
 
@@ -53,7 +53,7 @@ tests/rosetta-cli.tar.gz:
 	@$(DOWNLOAD) $@ https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
 
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
-	@printf "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"
+	@echo "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"
 	@tar -xf $< -C tests
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
