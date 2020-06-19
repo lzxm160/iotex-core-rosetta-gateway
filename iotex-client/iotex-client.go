@@ -1,0 +1,273 @@
+package iotex_client
+
+import (
+	//"encoding/hex"
+	//"fmt"
+	"context"
+	"errors"
+
+	"github.com/iotexproject/iotex-proto/golang/iotextypes"
+
+	"github.com/iotexproject/iotex-proto/golang/iotexapi"
+
+	"github.com/iotexproject/iotex-antenna-go/v2/iotex"
+	//"github.com/trustwallet/blockatlas/pkg/logger"
+	//"os"
+
+	//"context"
+	//"encoding/hex"
+	//"encoding/json"
+	//"fmt"
+	//"os"
+	//"sync"
+	//
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
+
+	//cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
+	//"github.com/oasisprotocol/oasis-core/go/common/logging"
+	//consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
+	//"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
+	//control "github.com/oasisprotocol/oasis-core/go/control/api"
+	//staking "github.com/oasisprotocol/oasis-core/go/staking/api"
+
+	"sync"
+)
+
+// IoTexClient is the IoTex blockchain client interface.
+type IoTexClient interface {
+	// GetChainID returns the network chain context, derived from the
+	// genesis document.
+	GetChainID(ctx context.Context) (string, error)
+
+	// GetBlock returns the Oasis block at given height.
+	GetBlock(ctx context.Context, height int64) (*IoTexBlock, error)
+
+	// GetLatestBlock returns latest Oasis block.
+	GetLatestBlock(ctx context.Context) (*IoTexBlock, error)
+
+	// GetGenesisBlock returns the Oasis genesis block.
+	GetGenesisBlock(ctx context.Context) (*IoTexBlock, error)
+
+	// GetAccount returns the Oasis staking account for given owner address
+	// at given height.
+	GetAccount(ctx context.Context, height int64, owner string) (*Account, error)
+	//
+	//// GetStakingEvents returns Oasis staking events at given height.
+	//GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error)
+	//
+	//// SubmitTx submits the given JSON-encoded transaction to the node.
+	//SubmitTx(ctx context.Context, txRaw string) error
+	//
+	//// GetNextNonce returns the nonce that should be used when signing the
+	//// next transaction for the given account address at given height.
+	//GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error)
+	//
+	//// GetStatus returns the status overview of the node.
+	//GetStatus(ctx context.Context) (*control.Status, error)
+}
+
+// IoTexBlock is the IoTex blockchain's block.
+type IoTexBlock struct {
+	Height       int64  // Block height.
+	Hash         string // Block hash.
+	Timestamp    int64  // UNIX time, converted to milliseconds.
+	ParentHeight int64  // Height of parent block.
+	ParentHash   string // Hash of parent block.
+}
+
+type Account struct {
+	Nonce   uint64
+	Balance string
+}
+
+// grpcIoTexClient is an implementation of IoTexClient using gRPC.
+type grpcIoTexClient struct {
+	sync.RWMutex
+
+	endpoint string
+	grpcConn *grpc.ClientConn
+}
+
+// NewIoTexClient returns an implementation of IoTexClient
+func NewIoTexClient(grpcAddr string) (cli IoTexClient, err error) {
+	grpc, err := iotex.NewDefaultGRPCConn(grpcAddr)
+	if err != nil {
+		return
+	}
+	cli = &grpcIoTexClient{endpoint: grpcAddr, grpcConn: grpc}
+	return
+}
+
+func (c *grpcIoTexClient) reconnect(ctx context.Context) {
+	c.Lock()
+	defer c.Unlock()
+
+	// Check if the existing connection is good.
+	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
+		return
+	} else {
+		// Connection needs to be re-established.
+		c.grpcConn = nil
+	}
+	c.grpcConn, _ = iotex.NewDefaultGRPCConn(c.endpoint)
+}
+
+func (c *grpcIoTexClient) GetChainID(ctx context.Context) (string, error) {
+	c.reconnect(ctx)
+	c.Lock()
+	defer c.Unlock()
+	return "1", nil
+	//client := consensus.NewConsensusClient(conn)
+	//genesis, err := client.GetGenesisDocument(ctx)
+	//if err != nil {
+	//	logger.Debug("GetChainID: failed to get genesis document", "err", err)
+	//	return "", err
+	//}
+	//oc.chainID = genesis.ChainContext()
+	//return oc.chainID, nil
+}
+
+func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
+	c.reconnect(ctx)
+	var parentHeight uint64
+	if height <= 1 {
+		parentHeight = 1
+	} else {
+		parentHeight = uint64(height) - 1
+	}
+
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	request := &iotexapi.GetBlockMetasRequest{
+		Lookup: &iotexapi.GetBlockMetasRequest_ByIndex{
+			ByIndex: &iotexapi.GetBlockMetasByIndexRequest{
+				Start: parentHeight,
+				Count: 2,
+			},
+		},
+	}
+	resp, err := client.GetBlockMetas(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.BlkMetas) == 0 {
+		return nil, errors.New("not found")
+	}
+	var blk, parentBlk *iotextypes.BlockMeta
+	if len(resp.BlkMetas) == 2 {
+		blk = resp.BlkMetas[1]
+		parentBlk = resp.BlkMetas[0]
+	} else {
+		blk = resp.BlkMetas[0]
+		parentBlk = resp.BlkMetas[0]
+	}
+	ret = &IoTexBlock{
+		Height:       int64(blk.Height),
+		Hash:         blk.Hash,
+		Timestamp:    blk.Timestamp.Seconds, // ms
+		ParentHeight: int64(parentHeight),
+		ParentHash:   parentBlk.Hash,
+	}
+	return
+}
+
+func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, error) {
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	res, err := client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return c.GetBlock(ctx, int64(res.ChainMeta.Height))
+}
+
+func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, error) {
+	return c.GetBlock(ctx, 1)
+}
+
+func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (ret *Account, err error) {
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	request := &iotexapi.GetAccountRequest{Address: owner}
+	resp, err := client.GetAccount(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	ret = &Account{
+		Nonce:   resp.AccountMeta.Nonce,
+		Balance: resp.AccountMeta.Balance,
+	}
+	return
+}
+
+//func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error) {
+//	conn, err := oc.connect(ctx)
+//	if err != nil {
+//		return nil, err
+//	}
+//	client := staking.NewStakingClient(conn)
+//	evts, err := client.GetEvents(ctx, height)
+//	if err != nil {
+//		return nil, err
+//	}
+//	// Change empty hashes to block hashes, as they belong to block events.
+//	var gotBlkHash bool
+//	var blkHash []byte
+//	for i := range evts {
+//		e := &evts[i]
+//		if e.TxHash.IsEmpty() {
+//			if !gotBlkHash {
+//				// First time, need to fetch the block hash.
+//				conClient := consensus.NewConsensusClient(conn)
+//				blk, err := conClient.GetBlock(ctx, height)
+//				if err != nil {
+//					return nil, err
+//				}
+//				blkHash = blk.Hash
+//				gotBlkHash = true
+//			}
+//			copy(e.TxHash[:], blkHash)
+//		}
+//	}
+//	return evts, nil
+//}
+//
+//func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
+//	conn, err := oc.connect(ctx)
+//	if err != nil {
+//		return err
+//	}
+//	client := consensus.NewConsensusClient(conn)
+//	var tx *transaction.SignedTransaction
+//	if err := json.Unmarshal([]byte(txRaw), &tx); err != nil {
+//		logger.Debug("SubmitTx: failed to unmarshal raw transaction", "err", err)
+//		return err
+//	}
+//	return client.SubmitTx(ctx, tx)
+//}
+//
+//func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
+//	conn, err := oc.connect(ctx)
+//	if err != nil {
+//		return 0, err
+//	}
+//	client := consensus.NewConsensusClient(conn)
+//	return client.GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
+//		AccountAddress: addr,
+//		Height:         height,
+//	})
+//}
+//
+//func (oc *grpcOasisClient) GetStatus(ctx context.Context) (*control.Status, error) {
+//	conn, err := oc.connect(ctx)
+//	if err != nil {
+//		return nil, err
+//	}
+//	client := control.NewNodeControllerClient(conn)
+//	return client.GetStatus(ctx)
+//}
+//
+//// New creates a new Oasis gRPC client.
+//func New() (OasisClient, error) {
+//	return &grpcOasisClient{}, nil
+//}
