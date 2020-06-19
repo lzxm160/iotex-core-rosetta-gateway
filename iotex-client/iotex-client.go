@@ -5,6 +5,7 @@ import (
 	//"fmt"
 	"context"
 	"errors"
+	"math"
 
 	"github.com/iotexproject/iotex-proto/golang/iotextypes"
 
@@ -21,9 +22,9 @@ import (
 	//"os"
 	//"sync"
 	//
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
-
 	//cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
 	//"github.com/oasisprotocol/oasis-core/go/common/logging"
 	//consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -33,6 +34,11 @@ import (
 
 	"sync"
 )
+
+var IoTexCurrency = &types.Currency{
+	Symbol:   "IoTex",
+	Decimals: 18,
+}
 
 // IoTexClient is the IoTex blockchain client interface.
 type IoTexClient interface {
@@ -56,15 +62,17 @@ type IoTexClient interface {
 	//// GetStakingEvents returns Oasis staking events at given height.
 	//GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error)
 	//
-	//// SubmitTx submits the given JSON-encoded transaction to the node.
-	//SubmitTx(ctx context.Context, txRaw string) error
+	// SubmitTx submits the given JSON-encoded transaction to the node.
+	SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error)
 	//
 	//// GetNextNonce returns the nonce that should be used when signing the
 	//// next transaction for the given account address at given height.
 	//GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error)
 	//
-	//// GetStatus returns the status overview of the node.
-	//GetStatus(ctx context.Context) (*control.Status, error)
+	// GetStatus returns the status overview of the node.
+	GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error)
+	GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error)
+	GetTransactions(ctx context.Context, height int64) ([]*types.Transaction, error)
 }
 
 // IoTexBlock is the IoTex blockchain's block.
@@ -164,7 +172,7 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	ret = &IoTexBlock{
 		Height:       int64(blk.Height),
 		Hash:         blk.Hash,
-		Timestamp:    blk.Timestamp.Seconds, // ms
+		Timestamp:    (blk.Timestamp.Seconds*1e9 + int64(blk.Timestamp.Nanos)) / 1e6, // ms
 		ParentHeight: int64(parentHeight),
 		ParentHash:   parentBlk.Hash,
 	}
@@ -196,6 +204,66 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 	ret = &Account{
 		Nonce:   resp.AccountMeta.Nonce,
 		Balance: resp.AccountMeta.Balance,
+	}
+	return
+}
+
+func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
+	blk, err := c.GetBlock(ctx, height)
+	if err != nil {
+		return
+	}
+	request := &iotexapi.GetActionsRequest{
+		Lookup: &iotexapi.GetActionsRequest_ByBlk{
+			ByBlk: &iotexapi.GetActionsByBlockRequest{
+				BlkHash: blk.Hash,
+				Start:   1,
+				Count:   math.MaxUint32,
+			},
+		},
+	}
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	res, err := client.GetActions(context.Background(), request)
+	if err != nil {
+		return
+	}
+	ret = make([]*types.Transaction, 0)
+	for _, act := range res.ActionInfo {
+		transfer := act.GetAction().GetCore().GetTransfer()
+		if transfer == nil {
+			continue
+		}
+		oper := []*types.Operation{
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index:        int64(act.GetAction().GetCore().GetNonce()),
+					NetworkIndex: nil,
+				},
+				RelatedOperations: nil,
+				Type:              "transfer",
+				Status:            "succeed",
+				Account: &types.AccountIdentifier{
+					Address:    act.Sender,
+					SubAccount: nil,
+					Metadata:   nil,
+				},
+				Amount: &types.Amount{
+					Value:    transfer.Amount,
+					Currency: IoTexCurrency,
+					Metadata: nil,
+				},
+				Metadata: nil,
+			},
+		}
+
+		ret = append(ret, &types.Transaction{
+			TransactionIdentifier: &types.TransactionIdentifier{
+				act.ActHash,
+			},
+			Operations: oper,
+			Metadata:   nil,
+		})
 	}
 	return
 }
@@ -232,19 +300,17 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 //	return evts, nil
 //}
 //
-//func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
-//	conn, err := oc.connect(ctx)
-//	if err != nil {
-//		return err
-//	}
-//	client := consensus.NewConsensusClient(conn)
-//	var tx *transaction.SignedTransaction
-//	if err := json.Unmarshal([]byte(txRaw), &tx); err != nil {
-//		logger.Debug("SubmitTx: failed to unmarshal raw transaction", "err", err)
-//		return err
-//	}
-//	return client.SubmitTx(ctx, tx)
-//}
+func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error) {
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	ret, err := client.SendAction(ctx, &iotexapi.SendActionRequest{Action: tx})
+	if err != nil {
+		return
+	}
+	txid = ret.ActionHash
+	return
+}
+
 //
 //func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
 //	conn, err := oc.connect(ctx)
@@ -258,14 +324,17 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 //	})
 //}
 //
-//func (oc *grpcOasisClient) GetStatus(ctx context.Context) (*control.Status, error) {
-//	conn, err := oc.connect(ctx)
-//	if err != nil {
-//		return nil, err
-//	}
-//	client := control.NewNodeControllerClient(conn)
-//	return client.GetStatus(ctx)
-//}
+func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error) {
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	return client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
+}
+func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error) {
+	c.reconnect(ctx)
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	return client.GetServerMeta(context.Background(), nil)
+}
+
 //
 //// New creates a new Oasis gRPC client.
 //func New() (OasisClient, error) {

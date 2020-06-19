@@ -36,13 +36,11 @@ const (
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
 // Rosetta service controllers.
 func NewBlockchainRouter(client ic.IoTexClient) http.Handler {
-	//networkAPIController := server.NewNetworkAPIController(services.NewNetworkAPIService(client))
+	networkAPIController := server.NewNetworkAPIController(services.NewNetworkAPIService(client))
 	accountAPIController := server.NewAccountAPIController(services.NewAccountAPIService(client))
-	//blockAPIController := server.NewBlockAPIController(services.NewBlockAPIService(client))
-	//constructionAPIController := server.NewConstructionAPIController(services.NewConstructionAPIService(client))
-
-	//return server.NewRouter(networkAPIController, accountAPIController, blockAPIController, constructionAPIController)
-	return server.NewRouter(nil, accountAPIController, nil, nil)
+	blockAPIController := server.NewBlockAPIController(services.NewBlockAPIService(client))
+	constructionAPIController := server.NewConstructionAPIController(services.NewConstructionAPIService(client))
+	return server.NewRouter(networkAPIController, accountAPIController, blockAPIController, constructionAPIController)
 }
 
 func main() {

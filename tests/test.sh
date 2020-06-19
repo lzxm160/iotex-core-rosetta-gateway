@@ -11,13 +11,10 @@ GRN=$'\e[32;1m'
 OFF=$'\e[0m'
 
 # Paths to various binaries and config files that we need.
-OASIS_ROSETTA_GW="${ROOT}/../oasis-core-rosetta-gateway"
-OASIS_NET_RUNNER="${ROOT}/oasis-net-runner"
-OASIS_NODE="${ROOT}/oasis-node"
-FIXTURE_FILE="${ROOT}/test-fixture-config.json"
+OASIS_ROSETTA_GW="${ROOT}/../iotex-core-rosetta-gateway"
 
 # Destination address for test transfers.
-DST="oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
+DST="io1lmqlk9fvg0qyvrn2z5l542lzn6fne46tza8a3j"
 
 # Kill all dangling processes on exit.
 cleanup() {
@@ -26,9 +23,6 @@ cleanup() {
 	wait || true
 }
 trap "cleanup" EXIT
-
-# The base directory for all the node and test env cruft.
-TEST_BASE_DIR=$(mktemp -d -t oasis-rosetta-XXXXXXXXXX)
 
 # The oasis-node binary must be in the path for the oasis-net-runner to find it.
 export PATH="${PATH}:${ROOT}"
