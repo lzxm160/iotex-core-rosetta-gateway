@@ -44,7 +44,7 @@ func main() {
 	if !ok {
 		panic("amount error")
 	}
-	signed, err := signedTransfer(recipient, pri, nonce, amo, gasLimit, gasprice)
+	signed, err := signedTransfer(recipient, pri.PrivateKey(), nonce, amo, gasLimit, gasprice)
 	if err != nil {
 		panic("sign error ")
 	}
