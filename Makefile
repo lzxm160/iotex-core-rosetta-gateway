@@ -32,11 +32,13 @@ ifdef HAVE_WGET
     DOWNLOAD := wget --quiet --show-progress --progress=bar:force:noscroll -O
 else
     HAVE_CURL := $(shell which curl > /dev/null && echo 1)
-ifdef HAVE_CURL
-    DOWNLOAD := curl --progress-bar --location -o
-else
-    $(error Please install wget or curl)
+    ifdef HAVE_CURL
+        DOWNLOAD := curl --progress-bar --location -o
+    else
+        $(error Please install wget or curl)
+    endif
 endif
+
 default: build
 all: clean build test
 
