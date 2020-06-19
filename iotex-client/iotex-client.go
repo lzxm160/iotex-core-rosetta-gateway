@@ -252,18 +252,15 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		if transfer == nil {
 			continue
 		}
-		fmt.Println("receipt", transfer.GetRecipient())
-		//requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: transfer.GetRecipient()}
-		//responseReceipt, err := cli.GetReceiptByAction(ctx, requestGetReceipt)
-		//if err != nil {
-		//	sta, ok := status.FromError(err)
-		//	if ok && sta.Code() == codes.NotFound {
-		//		message.State = Pending
-		//	} else if ok {
-		//		return output.NewError(output.APIError, sta.Message(), nil)
-		//	}
-		//	return output.NewError(output.NetworkError, "failed to invoke GetReceiptByAction api", err)
-		//}
+		requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: act.GetActHash()}
+		responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
+		if err != nil {
+			continue
+		}
+		status := "succeed"
+		if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
+			status = "fail"
+		}
 		oper := []*types.Operation{
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -272,7 +269,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 				},
 				RelatedOperations: nil,
 				Type:              "transfer",
-				Status:            "succeed",
+				Status:            status,
 				Account: &types.AccountIdentifier{
 					Address:    act.Sender,
 					SubAccount: nil,
