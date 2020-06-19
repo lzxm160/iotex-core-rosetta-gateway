@@ -4,8 +4,13 @@ import (
 	//"encoding/hex"
 	//"fmt"
 	"context"
+	"crypto/tls"
 	"errors"
 	"math"
+	"time"
+
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/iotexproject/iotex-proto/golang/iotextypes"
 
@@ -99,7 +104,7 @@ type grpcIoTexClient struct {
 
 // NewIoTexClient returns an implementation of IoTexClient
 func NewIoTexClient(grpcAddr string) (cli IoTexClient, err error) {
-	grpc, err := iotex.NewDefaultGRPCConn(grpcAddr)
+	grpc, err := NewDefaultGRPCConn(grpcAddr)
 	if err != nil {
 		return
 	}
@@ -340,3 +345,15 @@ func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMe
 //func New() (OasisClient, error) {
 //	return &grpcOasisClient{}, nil
 //}
+
+// NewDefaultGRPCConn creates a default grpc connection. With tls and retry.
+func NewDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
+	opts := []grpc_retry.CallOption{
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(10 * time.Second)),
+		grpc_retry.WithMax(3),
+	}
+	return grpc.Dial(endpoint,
+		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+}
