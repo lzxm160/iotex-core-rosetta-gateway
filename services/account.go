@@ -5,6 +5,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 )
 
@@ -24,6 +25,10 @@ func (s *accountAPIService) AccountBalance(
 	ctx context.Context,
 	request *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 	acc, err := s.client.GetAccount(ctx, 0, request.AccountIdentifier.Address)
 	if err != nil {
 		return nil, ErrUnableToGetAccount

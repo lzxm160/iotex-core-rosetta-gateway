@@ -51,10 +51,10 @@ func (s *constructionAPIService) ConstructionMetadata(
 	ctx context.Context,
 	request *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
-	//terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	//if terr != nil {
-	//	return nil, terr
-	//}
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 
 	// Get the account ID field from the Options object.
 	if request.Options == nil {
@@ -90,10 +90,10 @@ func (s *constructionAPIService) ConstructionSubmit(
 	ctx context.Context,
 	request *types.ConstructionSubmitRequest,
 ) (*types.ConstructionSubmitResponse, *types.Error) {
-	//terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	//if terr != nil {
-	//	return nil, terr
-	//}
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 	act := iotextypes.Action{}
 	tran, err := hex.DecodeString(request.SignedTransaction)
 	if err != nil {

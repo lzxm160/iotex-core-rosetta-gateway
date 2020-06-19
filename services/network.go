@@ -40,11 +40,10 @@ func (s *networkAPIService) NetworkStatus(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
-	//terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	//if terr != nil {
-	//	loggerNet.Error("NetworkStatus: network validation failed", "err", terr.Message)
-	//	return nil, terr
-	//}
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 
 	status, err := s.client.GetStatus(ctx)
 	if err != nil {
@@ -83,10 +82,10 @@ func (s *networkAPIService) NetworkOptions(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkOptionsResponse, *types.Error) {
-	//terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	//if terr != nil {
-	//	return nil, terr
-	//}
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 
 	version, err := s.client.GetVersion(ctx)
 	if err != nil {

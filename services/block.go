@@ -24,11 +24,10 @@ func (s *blockAPIService) Block(
 	ctx context.Context,
 	request *types.BlockRequest,
 ) (*types.BlockResponse, *types.Error) {
-	//terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	//if terr != nil {
-	//	loggerBlk.Error("Block: network validation failed", "err", terr.Message)
-	//	return nil, terr
-	//}
+	terr := ValidateNetworkIdentifier(ctx, s.client, request.NetworkIdentifier)
+	if terr != nil {
+		return nil, terr
+	}
 	var height int64
 
 	if request.BlockIdentifier != nil {
