@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 
@@ -46,6 +47,7 @@ func ValidateNetworkIdentifier(ctx context.Context, c ic.IoTexClient, ni *types.
 			return ErrInvalidBlockchain
 		}
 		if ni.SubNetworkIdentifier != nil {
+			fmt.Println("ni.SubNetworkIdentifier != nil")
 			return ErrInvalidSubnetwork
 		}
 		if ni.Network != chainID {
