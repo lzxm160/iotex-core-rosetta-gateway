@@ -354,6 +354,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if !ok {
 		return nil, errors.New("convert gas price error")
 	}
+	fmt.Println("gas price", gasPrice.String())
 	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
 	var actionType, dst string
 	amount := "0"
