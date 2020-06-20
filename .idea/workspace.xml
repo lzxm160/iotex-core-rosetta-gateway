@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="df5b60e2-bc18-4549-9f20-a9c9511d7515" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docker/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iotex-client/iotex-client.go" beforeDir="false" afterPath="$PROJECT_DIR$/iotex-client/iotex-client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/common.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/common.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/construction.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/construction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/network.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/network.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test.sh" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="E:\Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1dW4pjlPO2vhkQ6BbFr6lO08XJ5" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Module.GOPATH.is.expanded" value="false" />
+    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../iotex-analytics" />
+    <property name="settings.editor.selected.configurable" value="watcher.settings" />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1664" y="213" key="EditFileWatcherDialog" timestamp="1592534859722">
+      <screen x="1366" y="81" width="1440" height="819" />
+    </state>
+    <state x="1664" y="213" key="EditFileWatcherDialog/0.81.1366.687/1366.81.1440.819@1366.81.1440.819" timestamp="1592534859722" />
+    <state x="1805" y="252" key="FileChooserDialogImpl" timestamp="1592624233531">
+      <screen x="1366" y="81" width="1440" height="819" />
+    </state>
+    <state x="1805" y="252" key="FileChooserDialogImpl/0.81.1366.687/1366.81.1440.819@0.81.1366.687" timestamp="1592527714345" />
+    <state x="1805" y="252" key="FileChooserDialogImpl/0.81.1366.687/1366.81.1440.819@1366.81.1440.819" timestamp="1592624233531" />
+    <state x="1456" y="81" key="SettingsEditor" timestamp="1592534860560">
+      <screen x="1366" y="81" width="1440" height="819" />
+    </state>
+    <state x="1456" y="81" key="SettingsEditor/0.81.1366.687/1366.81.1440.819@1366.81.1440.819" timestamp="1592534860560" />
+    <state x="1670" y="122" width="1009" height="778" key="find.popup" timestamp="1592663833657">
+      <screen x="1366" y="81" width="1440" height="819" />
+    </state>
+    <state x="1670" y="122" width="1009" height="778" key="find.popup/0.81.1366.687/1366.81.1440.819@1366.81.1440.819" timestamp="1592663833657" />
+  </component>
+</project>
