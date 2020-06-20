@@ -54,12 +54,6 @@ func (s *networkAPIService) NetworkStatus(
 	if err != nil {
 		return nil, ErrUnableToGetNodeStatus
 	}
-	//peers := []*types.Peer{}
-	//for _, p := range status.Consensus.NodePeers {
-	//	peers = append(peers, &types.Peer{
-	//		PeerID: p,
-	//	})
-	//}
 
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: &types.BlockIdentifier{

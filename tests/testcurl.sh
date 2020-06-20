@@ -18,6 +18,12 @@ curl -X POST --data '{"metadata": {}}' http://127.0.0.1:8080/network/list
 curl -X POST --data '{
     "network_identifier": {
         "blockchain": "IoTex",
+        "network": "mainnet"},"metadata": {}}' http://127.0.0.1:8080/network/options
+
+
+curl -X POST --data '{
+    "network_identifier": {
+        "blockchain": "IoTex",
         "network": "mainnet"},
     "block_identifier": {"index": 390873}}' http://127.0.0.1:8080/block
 #response:
