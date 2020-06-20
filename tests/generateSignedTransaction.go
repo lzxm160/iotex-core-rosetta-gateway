@@ -32,6 +32,7 @@ func init() {
 	flag.StringVar(&gasPrice, "gasPrice", "1000000000000", "gas price")
 }
 func main() {
+	fmt.Println("privateKey", privateKey)
 	pri, err := account.HexStringToAccount(privateKey)
 	if err != nil {
 		panic("privatekey error")
