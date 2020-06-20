@@ -399,7 +399,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	oper := []*types.Operation{
 		&types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index:        int64(act.GetAction().GetCore().GetNonce()),
+				Index:        0,
 				NetworkIndex: nil,
 			},
 			RelatedOperations: nil,
@@ -419,7 +419,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		},
 		&types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index:        int64(act.GetAction().GetCore().GetNonce()),
+				Index:        1,
 				NetworkIndex: nil,
 			},
 			RelatedOperations: nil,
