@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -82,6 +83,7 @@ func (s *networkAPIService) NetworkOptions(
 	}
 
 	version, err := s.client.GetVersion(ctx)
+	fmt.Println(version, err)
 	if err != nil {
 		return nil, ErrUnableToGetNodeStatus
 	}
