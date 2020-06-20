@@ -63,16 +63,16 @@ type (
 		// genesis document.
 		GetChainID(ctx context.Context) (string, error)
 
-		// GetBlock returns the Oasis block at given height.
+		// GetBlock returns the IoTex block at given height.
 		GetBlock(ctx context.Context, height int64) (*IoTexBlock, error)
 
-		// GetLatestBlock returns latest Oasis block.
+		// GetLatestBlock returns latest IoTex block.
 		GetLatestBlock(ctx context.Context) (*IoTexBlock, error)
 
-		// GetGenesisBlock returns the Oasis genesis block.
+		// GetGenesisBlock returns the IoTex genesis block.
 		GetGenesisBlock(ctx context.Context) (*IoTexBlock, error)
 
-		// GetAccount returns the Oasis staking account for given owner address
+		// GetAccount returns the IoTex staking account for given owner address
 		// at given height.
 		GetAccount(ctx context.Context, height int64, owner string) (*Account, error)
 

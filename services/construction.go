@@ -5,11 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/iotexproject/iotex-proto/golang/iotextypes"
-
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/iotexproject/iotex-proto/golang/iotextypes"
 
 	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 )
@@ -82,17 +82,14 @@ func (s *constructionAPIService) ConstructionSubmit(
 		return nil, terr
 	}
 	act := iotextypes.Action{}
-	fmt.Println("signed:", request.SignedTransaction)
 	tran, err := hex.DecodeString(request.SignedTransaction)
 	if err != nil {
 		return nil, ErrUnableToSubmitTx
 	}
-	fmt.Println("before Unmarshal")
 	err = proto.Unmarshal(tran, &act)
 	if err != nil {
 		return nil, ErrUnableToSubmitTx
 	}
-	fmt.Println("before SubmitTx")
 	txID, err := s.client.SubmitTx(ctx, &act)
 	if err != nil {
 		fmt.Println(err)

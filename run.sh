@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-go build -o ./server .
+go build -o ./iotex-core-rosetta-gateway .
 export IoTexChainPoint=api.testnet.iotex.one:443
-./server
+./iotex-core-rosetta-gateway

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
+
 	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 	"github.com/iotexproject/iotex-core-rosetta-gateway/services"
 )
@@ -49,7 +50,7 @@ func main() {
 	// Prepare a new gRPC client.
 	client, err := ic.NewIoTexClient(addr, configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Failed to prepare Oasis gRPC client: %v\n", err)
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to prepare IoTex gRPC client: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -58,7 +59,7 @@ func main() {
 	fmt.Println("listen", "0.0.0.0:"+port)
 	err = http.ListenAndServe("0.0.0.0:"+port, router)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Oasis Rosetta Gateway server exited with error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "IoTex Rosetta Gateway server exited with error: %v\n", err)
 		os.Exit(1)
 	}
 }
