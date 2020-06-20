@@ -2,17 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="df5b60e2-bc18-4549-9f20-a9c9511d7515" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/docker/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docker/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker/config.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/iotex-client/iotex-client.go" beforeDir="false" afterPath="$PROJECT_DIR$/iotex-client/iotex-client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/common.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/common.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/construction.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/construction.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/network.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/network.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +28,7 @@
     <property name="configurable.Project.GOPATH.is.expanded" value="true" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../iotex-analytics" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="watcher.settings" />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
