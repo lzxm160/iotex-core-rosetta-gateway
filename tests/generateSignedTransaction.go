@@ -33,7 +33,9 @@ func init() {
 }
 func main() {
 	flag.Parse()
-	fmt.Println("privateKey", privateKey)
+
+	fmt.Println("::", recipient, privateKey, nonce, gasLimit, amount, gasPrice)
+
 	pri, err := account.HexStringToAccount(privateKey)
 	if err != nil {
 		panic("privatekey error")
