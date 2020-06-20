@@ -29,8 +29,8 @@ func (s *networkAPIService) NetworkList(
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
 			&types.NetworkIdentifier{
-				Blockchain: BlockchainName,
-				Network:    chainID,
+				Blockchain: s.client.GetConfig().Network_identifier.Blockchain,
+				Network:    s.client.GetConfig().Network_identifier.Network,
 			},
 		},
 	}, nil
