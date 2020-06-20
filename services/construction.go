@@ -95,6 +95,7 @@ func (s *constructionAPIService) ConstructionSubmit(
 	fmt.Println("before SubmitTx")
 	txID, err := s.client.SubmitTx(ctx, &act)
 	if err != nil {
+		fmt.Println(err)
 		return nil, ErrUnableToSubmitTx
 	}
 
