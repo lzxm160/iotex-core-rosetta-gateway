@@ -182,7 +182,7 @@ func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, erro
 }
 
 func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, error) {
-	return c.GetBlock(ctx, c.cfg.genesis_block_identifier.Index)
+	return c.GetBlock(ctx, c.cfg.Genesis_block_identifier.Index)
 }
 
 func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (ret *Account, err error) {
