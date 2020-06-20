@@ -21,6 +21,39 @@ import (
 	"github.com/iotexproject/iotex-proto/golang/iotextypes"
 )
 
+const (
+	// Transfer action type
+	Transfer = "transfer"
+	// Execution action type
+	Execution = "execution"
+	// DepositToRewardingFund action type
+	DepositToRewardingFund = "depositToRewardingFund"
+	// ClaimFromRewardingFund action type
+	ClaimFromRewardingFund = "claimFromRewardingFund"
+	// GrantReward action type
+	GrantReward = "grantReward"
+	// StakeCreate action type
+	StakeCreate = "stakeCreate"
+	// StakeUnstake action type
+	StakeUnstake = "stakeUnstake"
+	// StakeWithdraw action type
+	StakeWithdraw = "stakeWithdraw"
+	// StakeAddDeposit action type
+	StakeAddDeposit = "stakeAddDeposit"
+	// StakeRestake action type
+	StakeRestake = "stakeRestake"
+	// StakeChangeCandidate action type
+	StakeChangeCandidate = "stakeChangeCandidate"
+	// StakeTransferOwnership action type
+	StakeTransferOwnership = "stakeTransferOwnership"
+	// CandidateRegister action type
+	CandidateRegister = "candidateRegister"
+	// CandidateUpdate action type
+	CandidateUpdate = "candidateUpdate"
+	// PutPollResult action type
+	PutPollResult = "putPollResult"
+)
+
 var IoTexCurrency = &types.Currency{
 	Symbol:   "IoTex",
 	Decimals: 18,
@@ -231,49 +264,11 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 
 	ret = make([]*types.Transaction, 0)
 	for _, act := range actionInfo {
-		transfer := act.GetAction().GetCore().GetTransfer()
-		if transfer == nil {
-			continue
-		}
-		requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: act.GetActHash()}
-		responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
+		decode, err := decodeAction(act, client)
 		if err != nil {
 			continue
 		}
-		status := "succeed"
-		if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
-			status = "fail"
-		}
-		oper := []*types.Operation{
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index:        int64(act.GetAction().GetCore().GetNonce()),
-					NetworkIndex: nil,
-				},
-				RelatedOperations: nil,
-				Type:              "transfer",
-				Status:            status,
-				Account: &types.AccountIdentifier{
-					Address:    act.Sender,
-					SubAccount: nil,
-					Metadata:   nil,
-				},
-				Amount: &types.Amount{
-					Value:    transfer.Amount,
-					Currency: IoTexCurrency,
-					Metadata: nil,
-				},
-				Metadata: nil,
-			},
-		}
-
-		ret = append(ret, &types.Transaction{
-			TransactionIdentifier: &types.TransactionIdentifier{
-				act.ActHash,
-			},
-			Operations: oper,
-			Metadata:   nil,
-		})
+		ret = append(ret, decode)
 	}
 	return
 }
@@ -339,4 +334,116 @@ func newDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+}
+
+func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
+	ctx := context.Background()
+	requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: act.GetActHash()}
+	responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
+	if err != nil {
+		return
+	}
+	status := "succeed"
+	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
+		status = "fail"
+	}
+	var actionType, dst string
+	amount := "0"
+	senderSign := "-"
+	switch {
+	case act.GetAction().GetCore().GetTransfer() != nil:
+		actionType = Transfer
+		amount = act.GetAction().GetCore().GetTransfer().GetAmount()
+		dst = act.GetAction().GetCore().GetTransfer().GetRecipient()
+	case act.GetAction().GetCore().GetExecution() != nil:
+		actionType = Execution
+		amount = act.GetAction().GetCore().GetExecution().GetAmount()
+		dst = act.GetAction().GetCore().GetExecution().GetContract()
+	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
+		actionType = DepositToRewardingFund
+		amount = act.GetAction().GetCore().GetDepositToRewardingFund().GetAmount()
+		//dst=act.GetAction().GetCore().GetDepositToRewardingFund().get
+	case act.GetAction().GetCore().GetClaimFromRewardingFund() != nil:
+		actionType = ClaimFromRewardingFund
+		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
+		senderSign = "+"
+	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
+		// TODO need to check this
+		actionType = StakeAddDeposit
+		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
+	//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
+	case act.GetAction().GetCore().GetStakeCreate() != nil:
+		// TODO need to check this
+		actionType = StakeCreate
+		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
+		//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
+		//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
+		//	// TODO need to check this
+		//	actionType = StakeAddDeposit
+		//	amount = act.GetAction().GetCore().GetStakeWithdraw()()
+		//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
+		//senderSign = "+"
+	}
+
+	if amount == "0" {
+		return nil, nil
+	}
+	var senderAmountWithSign, dstAmountWithSign string
+	if senderSign == "-" {
+		senderAmountWithSign = senderSign + amount
+		dstAmountWithSign = amount
+	} else {
+		senderAmountWithSign = amount
+		dstAmountWithSign = "-" + amount
+	}
+	oper := []*types.Operation{
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index:        int64(act.GetAction().GetCore().GetNonce()),
+				NetworkIndex: nil,
+			},
+			RelatedOperations: nil,
+			Type:              actionType,
+			Status:            status,
+			Account: &types.AccountIdentifier{
+				Address:    act.Sender,
+				SubAccount: nil,
+				Metadata:   nil,
+			},
+			Amount: &types.Amount{
+				Value:    senderAmountWithSign,
+				Currency: IoTexCurrency,
+				Metadata: nil,
+			},
+			Metadata: nil,
+		},
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index:        int64(act.GetAction().GetCore().GetNonce()),
+				NetworkIndex: nil,
+			},
+			RelatedOperations: nil,
+			Type:              actionType,
+			Status:            status,
+			Account: &types.AccountIdentifier{
+				Address:    dst,
+				SubAccount: nil,
+				Metadata:   nil,
+			},
+			Amount: &types.Amount{
+				Value:    dstAmountWithSign,
+				Currency: IoTexCurrency,
+				Metadata: nil,
+			},
+			Metadata: nil,
+		},
+	}
+	ret = &types.Transaction{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			act.ActHash,
+		},
+		Operations: oper,
+		Metadata:   nil,
+	}
+	return
 }
