@@ -348,6 +348,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
 		status = "fail"
 	}
+	fmt.Println("act.GetGasFee()", act.GetGasFee())
 	gasFee, ok := new(big.Int).SetString(act.GetGasFee(), 10)
 	if !ok {
 		return nil, errors.New("convert gasFee error")
