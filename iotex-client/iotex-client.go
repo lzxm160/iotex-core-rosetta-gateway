@@ -315,7 +315,7 @@ func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMeta
 func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error) {
 	c.reconnect(ctx)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	return client.GetServerMeta(context.Background(), nil)
+	return client.GetServerMeta(context.Background(), &iotexapi.GetServerMetaRequest{})
 }
 
 // newDefaultGRPCConn creates a default grpc connection. With tls and retry.
