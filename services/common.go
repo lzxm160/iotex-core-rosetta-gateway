@@ -4,25 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
-)
 
-//
-//import (
-//	"context"
-//
-//	"github.com/coinbase/rosetta-sdk-go/types"
-//
-//	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
-//)
-//
-// BlockchainName is the name of the IoTex blockchain.
-const (
-	BlockchainName = "IoTex"
-	Symbol         = "IoTex"
-	chainID        = "mainnet"
+	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 )
 
 // IoTexCurrency is the currency used on the IoTex blockchain.
@@ -31,21 +15,12 @@ var IoTexCurrency = &types.Currency{
 	Decimals: 18,
 }
 
-//
-//// GetChainID returns the chain ID.
-//func GetChainID(ctx context.Context, oc oc.OasisClient) (string, *types.Error) {
-//	chainID, err := oc.GetChainID(ctx)
-//	if err != nil {
-//		return "", ErrUnableToGetChainID
-//	}
-//	return chainID, nil
-//}
-//
 // ValidateNetworkIdentifier validates the network identifier.
 func ValidateNetworkIdentifier(ctx context.Context, c ic.IoTexClient, ni *types.NetworkIdentifier) *types.Error {
 	if ni != nil {
 		fmt.Println("ni != nil")
-		if ni.Blockchain != BlockchainName {
+		cfg := c.GetConfig()
+		if ni.Blockchain != cfg.Network_identifier.Blockchain {
 			return ErrInvalidBlockchain
 		}
 		if ni.SubNetworkIdentifier != nil {
@@ -53,8 +28,7 @@ func ValidateNetworkIdentifier(ctx context.Context, c ic.IoTexClient, ni *types.
 			return ErrInvalidSubnetwork
 		}
 		fmt.Println("ni.Network chainID")
-		if ni.Network != chainID {
-			fmt.Println("ni.Network != chainID")
+		if ni.Network != cfg.Network_identifier.Network {
 			return ErrInvalidNetwork
 		}
 	} else {

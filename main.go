@@ -2,22 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
-
-	//"context"
-	//"fmt"
-	//"github.com/trustwallet/blockatlas/pkg/logger"
-	//"net/http"
-	//"os"
-	//"strconv"
-	//"strings"
-	//"time"
-	//
-	//"github.com/coinbase/rosetta-sdk-go/server"
-	//"github.com/oasisprotocol/oasis-core/go/common/logging"
-	//
-	//"github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
 	"net/http"
+	"os"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	ic "github.com/iotexproject/iotex-core-rosetta-gateway/iotex-client"
@@ -31,6 +17,7 @@ const (
 	// IoTexChainPoint is the name of the environment variable that specifies
 	// which the IoTex blockchain endpoint.
 	IoTexChainPoint = "IoTexChainPoint"
+	ConfigPath      = "ConfigPath"
 )
 
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
@@ -54,9 +41,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", IoTexChainPoint)
 		os.Exit(1)
 	}
+	configPath := os.Getenv(ConfigPath)
+	if configPath == "" {
+		configPath = "config.json"
+	}
 
 	// Prepare a new gRPC client.
-	client, err := ic.NewIoTexClient(addr)
+	client, err := ic.NewIoTexClient(addr, configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: Failed to prepare Oasis gRPC client: %v\n", err)
 		os.Exit(1)
