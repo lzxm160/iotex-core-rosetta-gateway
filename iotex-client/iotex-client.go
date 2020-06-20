@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"sync"
 	"time"
 
@@ -347,6 +348,10 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
 		status = "fail"
 	}
+	gasFee, ok := new(big.Int).SetString(act.GetGasFee(), 10)
+	if !ok {
+		return nil, errors.New("convert gasFee error")
+	}
 	var actionType, dst string
 	amount := "0"
 	senderSign := "-"
@@ -388,12 +393,17 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if amount == "0" {
 		return nil, nil
 	}
+	amountInt, ok := new(big.Int).SetString(amount, 10)
+	if !ok {
+		return nil, errors.New("convert amount error")
+	}
+	amountInt = amountInt.Add(amountInt, gasFee)
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
-		senderAmountWithSign = senderSign + amount
+		senderAmountWithSign = senderSign + amountInt.String()
 		dstAmountWithSign = amount
 	} else {
-		senderAmountWithSign = amount
+		senderAmountWithSign = amountInt.String()
 		dstAmountWithSign = "-" + amount
 	}
 	oper := []*types.Operation{
