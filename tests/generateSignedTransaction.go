@@ -24,10 +24,10 @@ var (
 )
 
 func init() {
-	flag.StringVar(&recipient, "recipient", "", "recipient's address")
-	flag.StringVar(&privateKey, "privateKey", "", "sender's private key in hex string format")
-	flag.Uint64Var(&nonce, "nonce", 1, "sender's nonce")
-	flag.StringVar(&amount, "amount", "0", "send amount")
+	flag.StringVar(&recipient, "r", "", "recipient's address")
+	flag.StringVar(&privateKey, "p", "", "sender's private key in hex string format")
+	flag.Uint64Var(&nonce, "n", 1, "sender's nonce")
+	flag.StringVar(&amount, "a", "0", "send amount")
 	flag.Uint64Var(&gasLimit, "gasLimit", 1000000, "gas limit")
 	flag.StringVar(&gasPrice, "gasPrice", "1000000000000", "gas price")
 }
