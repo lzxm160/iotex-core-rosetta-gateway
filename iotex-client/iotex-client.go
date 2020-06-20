@@ -348,9 +348,13 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
 		status = "fail"
 	}
-	fmt.Println("responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed()", responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed())
-	gasFee := new(big.Int).SetUint64(responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed())
 
+	gasConsumed := new(big.Int).SetUint64(responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed())
+	gasPrice, ok := new(big.Int).SetString(act.GetAction().GetCore().GetGasPrice(), 10)
+	if !ok {
+		return nil, errors.New("convert gas price error")
+	}
+	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
 	var actionType, dst string
 	amount := "0"
 	senderSign := "-"
