@@ -62,8 +62,8 @@ func (s *networkAPIService) NetworkStatus(
 		},
 		CurrentBlockTimestamp: blk.Timestamp, // ms
 		GenesisBlockIdentifier: &types.BlockIdentifier{
-			Index: 1,
-			Hash:  "",
+			Index: s.client.GetConfig().Genesis_block_identifier.Index,
+			Hash:  s.client.GetConfig().Genesis_block_identifier.Hash,
 		},
 		Peers: nil,
 	}
