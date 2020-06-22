@@ -356,9 +356,6 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		fmt.Println(Transfer, amount, dst)
 	case act.GetAction().GetCore().GetExecution() != nil:
 		fmt.Println(Execution)
-		if act.GetAction().GetCore().GetExecution().GetAmount() == "0" {
-			return nil, nil
-		}
 		// this one need special handler
 		return handleExecution(gasFee, status, act.ActHash, act.GetAction().GetCore().GetExecution(), client)
 	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
@@ -437,6 +434,7 @@ func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes
 	}
 	resp, err := client.GetEvmTransfersByActionHash(context.Background(), request)
 	if err != nil {
+		fmt.Println("GetEvmTransfersByActionHash", err)
 		return
 	}
 	fmt.Println("len resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
