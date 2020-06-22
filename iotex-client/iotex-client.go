@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"sort"
@@ -242,7 +243,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		return
 	}
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	// this limit from iotex-core's default value
+	// this limit is from iotex-core's default value
 	limit := uint64(1000)
 	var actionInfo []*iotexapi.ActionInfo
 	for i := uint64(0); ; i++ {
@@ -261,7 +262,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		}
 		actionInfo = append(actionInfo, res.ActionInfo...)
 	}
-
+	fmt.Println("265")
 	ret = make([]*types.Transaction, 0)
 	for _, act := range actionInfo {
 		decode, err := decodeAction(act, client)
