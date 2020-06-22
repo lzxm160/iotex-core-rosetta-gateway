@@ -153,6 +153,12 @@ func (c *grpcIoTexClient) GetChainID(ctx context.Context) (string, error) {
 }
 
 func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
+	c.Lock()
+	defer c.Unlock()
+	return c.getBlock(ctx, height)
+}
+
+func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
 	err = c.reconnect()
 	if err != nil {
 		return
@@ -202,6 +208,8 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 }
 
 func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, error) {
+	c.Lock()
+	defer c.Unlock()
 	err := c.reconnect()
 	if err != nil {
 		return nil, err
@@ -211,14 +219,18 @@ func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, erro
 	if err != nil {
 		return nil, err
 	}
-	return c.GetBlock(ctx, int64(res.ChainMeta.Height))
+	return c.getBlock(ctx, int64(res.ChainMeta.Height))
 }
 
 func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, error) {
-	return c.GetBlock(ctx, c.cfg.Genesis_block_identifier.Index)
+	c.Lock()
+	defer c.Unlock()
+	return c.getBlock(ctx, c.cfg.Genesis_block_identifier.Index)
 }
 
 func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (ret *Account, err error) {
+	c.Lock()
+	defer c.Unlock()
 	err = c.reconnect()
 	if err != nil {
 		return
@@ -237,7 +249,9 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 }
 
 func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
-	blk, err := c.GetBlock(ctx, height)
+	c.Lock()
+	defer c.Unlock()
+	blk, err := c.getBlock(ctx, height)
 	if err != nil {
 		return
 	}
@@ -277,6 +291,8 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 }
 
 func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error) {
+	c.Lock()
+	defer c.Unlock()
 	err = c.reconnect()
 	if err != nil {
 		return
@@ -291,6 +307,8 @@ func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (
 }
 
 func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error) {
+	c.Lock()
+	defer c.Unlock()
 	err := c.reconnect()
 	if err != nil {
 		return nil, err
@@ -300,12 +318,14 @@ func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMeta
 }
 
 func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error) {
+	c.Lock()
+	defer c.Unlock()
 	err := c.reconnect()
 	if err != nil {
 		return nil, err
 	}
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	return client.GetServerMeta(context.Background(), &iotexapi.GetServerMetaRequest{})
+	return client.GetServerMeta(ctx, &iotexapi.GetServerMetaRequest{})
 }
 
 func (c *grpcIoTexClient) GetConfig() *Config {
@@ -313,9 +333,6 @@ func (c *grpcIoTexClient) GetConfig() *Config {
 }
 
 func (c *grpcIoTexClient) reconnect() (err error) {
-	c.Lock()
-	defer c.Unlock()
-
 	// Check if the existing connection is good.
 	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
 		return
