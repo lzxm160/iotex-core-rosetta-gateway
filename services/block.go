@@ -43,9 +43,10 @@ func (s *blockAPIService) Block(
 	if err != nil {
 		return nil, ErrUnableToGetBlk
 	}
-	fmt.Println("before GetTransactions")
+
 	txns, err := s.client.GetTransactions(ctx, height)
 	if err != nil {
+		fmt.Println("GetTransactions", err)
 		return nil, ErrUnableToGetBlk
 	}
 	tblk := &types.Block{
