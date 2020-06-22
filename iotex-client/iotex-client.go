@@ -430,6 +430,8 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 }
 
 func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes.Execution, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
+	fmt.Println("handleExecution gasFee", gasFee)
+	fmt.Println("handleExecution status,hash", status, hash)
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
 		ActionHash: hash,
 	}
@@ -438,10 +440,15 @@ func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes
 		return
 	}
 	var src, dst addressAmountList
-	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
+	for i, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
+		amount := new(big.Int).SetBytes(transfer.Amount)
+		if i == 0 {
+			amount = amount.Add(amount, gasFee)
+		}
+		// put gasFee in first from address
 		src = append(src, &addressAmount{
 			address: transfer.From,
-			amount:  "-" + new(big.Int).SetBytes(transfer.Amount).String(),
+			amount:  "-" + amount.String(),
 		})
 		dst = append(dst, &addressAmount{
 			address: transfer.To,
