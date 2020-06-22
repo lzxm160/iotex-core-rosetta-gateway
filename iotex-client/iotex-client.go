@@ -439,6 +439,7 @@ func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes
 	if err != nil {
 		return
 	}
+	fmt.Println("len resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	var src, dst addressAmountList
 	for i, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
 		amount := new(big.Int).SetBytes(transfer.Amount)
