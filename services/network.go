@@ -99,7 +99,7 @@ func (s *networkAPIService) NetworkOptions(
 					Successful: true,
 				},
 			},
-			OperationTypes: []string{"transfer"},
+			OperationTypes: []string{"transfer", "fee"},
 			Errors:         ErrorList,
 		},
 	}, nil
