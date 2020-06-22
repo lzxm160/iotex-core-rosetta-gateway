@@ -404,6 +404,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if amount == "0" || actionType == "" {
 		return nil, nil
 	}
+	fmt.Println("actionType", actionType)
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
 		senderAmountWithSign = senderSign + amount
