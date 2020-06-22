@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+
+# Kill all dangling processes on exit.
+cleanup() {
+	printf "${OFF}"
+	pkill -P $$ || true
+	wait || true
+}
+trap "cleanup" EXIT
+
 # ANSI escape codes to brighten up the output.
 GRN=$'\e[32;1m'
 OFF=$'\e[0m'
