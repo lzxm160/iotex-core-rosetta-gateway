@@ -336,29 +336,36 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		actionType = Transfer
 		amount = act.GetAction().GetCore().GetTransfer().GetAmount()
 		dst = act.GetAction().GetCore().GetTransfer().GetRecipient()
+		fmt.Println(Transfer, amount, dst)
 	case act.GetAction().GetCore().GetExecution() != nil:
+		fmt.Println(Execution)
 		if act.GetAction().GetCore().GetExecution().GetAmount() == "0" {
 			return nil, nil
 		}
 		// this one need special handler
 		return handleExecution(gasFee, status, act.ActHash, act.GetAction().GetCore().GetExecution(), client)
 	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
+		fmt.Println(DepositToRewardingFund)
 		actionType = DepositToRewardingFund
 		amount = act.GetAction().GetCore().GetDepositToRewardingFund().GetAmount()
 		//dst=act.GetAction().GetCore().GetDepositToRewardingFund().get
 	case act.GetAction().GetCore().GetClaimFromRewardingFund() != nil:
+		fmt.Println(ClaimFromRewardingFund)
 		actionType = ClaimFromRewardingFund
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
 		senderSign = "+"
 	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
+		fmt.Println(StakeAddDeposit)
 		actionType = StakeAddDeposit
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
 	case act.GetAction().GetCore().GetStakeCreate() != nil:
+		fmt.Println(StakeCreate)
 		actionType = StakeCreate
 		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
 		// TODO need to add this when this is available in iotex-core
 		//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
-
+	default:
+		fmt.Println("default")
 	}
 
 	amountInt, ok := new(big.Int).SetString(amount, 10)
@@ -366,6 +373,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		return nil, errors.New("convert amount error")
 	}
 	amountInt = amountInt.Add(amountInt, gasFee)
+	fmt.Println("amountInt", amountInt.String())
 	// if amount+gas fee is 0 just return
 	if amountInt.Sign() != 1 {
 		return nil, nil
