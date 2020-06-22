@@ -56,7 +56,7 @@ const (
 )
 
 var IoTexCurrency = &types.Currency{
-	Symbol:   "IoTex",
+	Symbol:   "Iotx",
 	Decimals: 18,
 }
 
