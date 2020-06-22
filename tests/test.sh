@@ -2,7 +2,7 @@
 # ANSI escape codes to brighten up the output.
 GRN=$'\e[32;1m'
 OFF=$'\e[0m'
-GW="./iotex-core-rosetta-gateway"
+GW="./run.sh"
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 cd ..
 ${GW} &
