@@ -50,13 +50,13 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@echo "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"
 	@tar -xf $< -C tests
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
-	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
+	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests
 
 .PHONY: test
 test: build tests/rosetta-cli
 	@echo "Running tests...\n"
 	@chmod +x ./tests/test.sh
-	@./tests/test.sh
+	@cd tests&&./test.sh
 
 .PHONY: clean
 clean:
