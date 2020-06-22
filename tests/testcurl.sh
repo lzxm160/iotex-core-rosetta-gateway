@@ -71,5 +71,4 @@ curl -X POST --data '{
         "network": "testnet"},
     "block_identifier": {"index": 4034780}}' http://127.0.0.1:8080/block
 #response:
-#{"code":12,"message":"unable to get block","retriable":true}
-#rpc error: code = Unavailable desc = evm transfer index not supported
+#{"block":{"block_identifier":{"index":4034780,"hash":"bc1ad74d423f84e553602798e86019254b70d4499f1738a11c285ab9e31ea3b2"},"parent_block_identifier":{"index":4034779,"hash":"ac25b97cb7c9743b496cf45586d442ae4777753c77ca08d539bb96f30bca08c6"},"timestamp":1592801095000,"transactions":[{"transaction_identifier":{"hash":"9f261c47ad6611388c8e4569d2db378d2a7d98607c4259f5f9819ae6703742e6"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"succeed","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IoTex","decimals":18}}},{"operation_identifier":{"index":0},"type":"stakeCreate","status":"succeed","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-100000000000000000000","currency":{"symbol":"IoTex","decimals":18}}}]}]}}

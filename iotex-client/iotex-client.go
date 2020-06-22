@@ -492,7 +492,7 @@ func packTransaction(ret *types.Transaction, src, dst addressAmountList, actionT
 	sort.Sort(src)
 	sort.Sort(dst)
 	var oper []*types.Operation
-	endIndex, oper, err := addOperation(src, actionType, status, 0, oper)
+	endIndex, oper, err := addOperation(src, actionType, status, 1, oper)
 	if err != nil {
 		return
 	}
