@@ -54,6 +54,9 @@ const (
 	CandidateUpdate = "candidateUpdate"
 	// PutPollResult action type
 	PutPollResult = "putPollResult"
+	statusSuccess = "success"
+	statusFail    = "fail"
+	actionTypeFee = "fee"
 )
 
 var IoTexCurrency = &types.Currency{
@@ -341,27 +344,11 @@ func newDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
 }
 
 func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
-	gasFee, status, err := gasFeeAndStatus(act, client)
+	ret, status, err := gasFeeAndStatus(act, client)
 	if err != nil {
-		return nil, err
+		return
 	}
-	// if gasFee is 0
-	if gasFee.Sign() != 1 {
-		return nil, nil
-	}
-	sender := addressAmountList{{address: act.Sender, amount: "-" + gasFee.String()}}
-	var oper []*types.Operation
-	_, oper, err = addOperation(sender, "fee", status, 0, oper)
-	if err != nil {
-		return nil, err
-	}
-	ret = &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			act.ActHash,
-		},
-		Operations: oper,
-		Metadata:   nil,
-	}
+
 	var actionType, dst string
 	amount := "0"
 	senderSign := "-"
@@ -373,25 +360,26 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		fmt.Println(Transfer, amount, dst)
 	case act.GetAction().GetCore().GetExecution() != nil:
 		fmt.Println(Execution)
-		// this one need special handler
+		// this one need special handler,TODO test when testnet enable systemlog
 		err = handleExecution(ret, status, act.ActHash, client)
 		return
 	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
+		// TODO test for this action
 		fmt.Println(DepositToRewardingFund)
 		actionType = DepositToRewardingFund
 		amount = act.GetAction().GetCore().GetDepositToRewardingFund().GetAmount()
-		//dst=act.GetAction().GetCore().GetDepositToRewardingFund().get
 	case act.GetAction().GetCore().GetClaimFromRewardingFund() != nil:
+		// TODO test for this action
 		fmt.Println(ClaimFromRewardingFund)
 		actionType = ClaimFromRewardingFund
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
 		senderSign = "+"
 	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
+		// TODO test for this action
 		fmt.Println(StakeAddDeposit)
 		actionType = StakeAddDeposit
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
 	case act.GetAction().GetCore().GetStakeCreate() != nil:
-		fmt.Println(StakeCreate)
 		actionType = StakeCreate
 		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
 	// TODO need to add this when this is available in iotex-core
@@ -412,11 +400,8 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		actionType = CandidateUpdate
 	case act.GetAction().GetCore().GetPutPollResult() != nil:
 		actionType = PutPollResult
-	default:
-		actionType = "default"
-		fmt.Println("default")
 	}
-	if amount == "0" {
+	if amount == "0" || actionType == "" {
 		return nil, nil
 	}
 	var senderAmountWithSign, dstAmountWithSign string
@@ -427,14 +412,10 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		senderAmountWithSign = amount
 		dstAmountWithSign = "-" + amount
 	}
-	src := []*addressAmount{{
-		address: act.Sender,
-		amount:  senderAmountWithSign}}
+	src := []*addressAmount{{address: act.Sender, amount: senderAmountWithSign}}
 	var dstAll []*addressAmount
 	if dst != "" {
-		dstAll = []*addressAmount{{
-			address: dst,
-			amount:  dstAmountWithSign}}
+		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
 	err = packTransaction(ret, src, dstAll, actionType, status, act.ActHash)
 	return
@@ -466,16 +447,16 @@ func handleExecution(ret *types.Transaction, status, hash string, client iotexap
 	return packTransaction(ret, src, dst, Execution, status, hash)
 }
 
-func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (gasFee *big.Int, status string, err error) {
+func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, status string, err error) {
 	ctx := context.Background()
 	requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: act.GetActHash()}
 	responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
 	if err != nil {
 		return
 	}
-	status = "succeed"
+	status = statusSuccess
 	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
-		status = "fail"
+		status = statusFail
 	}
 
 	gasConsumed := new(big.Int).SetUint64(responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed())
@@ -484,7 +465,24 @@ func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient)
 		err = errors.New("convert gas price error")
 		return
 	}
-	gasFee = gasPrice.Mul(gasPrice, gasConsumed)
+	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
+	// if gasFee is 0
+	if gasFee.Sign() != 1 {
+		return nil, "", nil
+	}
+	sender := addressAmountList{{address: act.Sender, amount: "-" + gasFee.String()}}
+	var oper []*types.Operation
+	_, oper, err = addOperation(sender, actionTypeFee, status, 0, oper)
+	if err != nil {
+		return nil, "", err
+	}
+	ret = &types.Transaction{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			act.ActHash,
+		},
+		Operations: oper,
+		Metadata:   nil,
+	}
 	return
 }
 
