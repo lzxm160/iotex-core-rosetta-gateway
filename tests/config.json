@@ -8,6 +8,7 @@
   "hash": "230ba8095d5a505e355652f9dcc2b13605419a8fa3d3fd5ddc6d24fd6a902641"
  },
  "allowed_operation_types": [
+  "fee",
   "transfer"
  ],
  "allowed_operation_statuses": [
