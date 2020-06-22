@@ -37,6 +37,28 @@ const (
 	StakeWithdraw = "stakeWithdraw"
 	// StakeAddDeposit action type
 	StakeAddDeposit = "stakeAddDeposit"
+	// GrantReward action type
+	GrantReward = "grantReward"
+	// StakeCreate action type
+	StakeCreate = "stakeCreate"
+	// StakeUnstake action type
+	StakeUnstake = "stakeUnstake"
+	// StakeWithdraw action type
+	StakeWithdraw = "stakeWithdraw"
+	// StakeAddDeposit action type
+	StakeAddDeposit = "stakeAddDeposit"
+	// StakeRestake action type
+	StakeRestake = "stakeRestake"
+	// StakeChangeCandidate action type
+	StakeChangeCandidate = "stakeChangeCandidate"
+	// StakeTransferOwnership action type
+	StakeTransferOwnership = "stakeTransferOwnership"
+	// CandidateRegister action type
+	CandidateRegister = "candidateRegister"
+	// CandidateUpdate action type
+	CandidateUpdate = "candidateUpdate"
+	// PutPollResult action type
+	PutPollResult = "putPollResult"
 )
 
 var IoTexCurrency = &types.Currency{
@@ -362,12 +384,29 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		fmt.Println(StakeCreate)
 		actionType = StakeCreate
 		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
-		// TODO need to add this when this is available in iotex-core
-		//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
+	// TODO need to add this when this is available in iotex-core
+	//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
+	case act.GetAction().GetCore().GetGrantReward() != nil:
+		actionType = GrantReward
+	case act.GetAction().GetCore().GetStakeUnstake() != nil:
+		actionType = StakeUnstake
+	case act.GetAction().GetCore().GetStakeRestake() != nil:
+		actionType = StakeRestake
+	case act.GetAction().GetCore().GetStakeChangeCandidate() != nil:
+		actionType = StakeChangeCandidate
+	case act.GetAction().GetCore().GetStakeTransferOwnership() != nil:
+		actionType = StakeTransferOwnership
+	case act.GetAction().GetCore().GetCandidateRegister() != nil:
+		actionType = CandidateRegister
+	case act.GetAction().GetCore().GetCandidateUpdate() != nil:
+		actionType = CandidateUpdate
+	case act.GetAction().GetCore().GetPutPollResult() != nil:
+		actionType = PutPollResult
 	default:
+		actionType = "default"
 		fmt.Println("default")
 	}
-
+	fmt.Println("actionType", actionType)
 	amountInt, ok := new(big.Int).SetString(amount, 10)
 	if !ok {
 		return nil, errors.New("convert amount error")
