@@ -56,7 +56,7 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 test: build tests/rosetta-cli
 	@echo "Running tests...\n"
 	@chmod +x ./tests/test.sh
-	@cd tests&&./test.sh
+	@cd tests&&./test.sh&&chmod -x ./test.sh
 
 .PHONY: clean
 clean:

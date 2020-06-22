@@ -2,7 +2,6 @@
 
 # Kill all dangling processes on exit.
 cleanup() {
-  chmod -x ./test.sh
 	printf "${OFF}"
 	pkill -P $$ || true
 	wait || true
