@@ -33,14 +33,9 @@ const (
 	// ClaimFromRewardingFund action type
 	ClaimFromRewardingFund = "claimFromRewardingFund"
 	// StakeCreate action type
-	StakeCreate   = "stakeCreate"
-	StakeWithdraw = "stakeWithdraw"
-	// StakeAddDeposit action type
-	StakeAddDeposit = "stakeAddDeposit"
+	StakeCreate = "stakeCreate"
 	// GrantReward action type
 	GrantReward = "grantReward"
-	// StakeCreate action type
-	StakeCreate = "stakeCreate"
 	// StakeUnstake action type
 	StakeUnstake = "stakeUnstake"
 	// StakeWithdraw action type
