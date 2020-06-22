@@ -334,6 +334,7 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		err = handleExecution(ret, status, act.ActHash, client)
 		return
 	}
+	fmt.Println("decodeAction 337")
 	amount, senderSign, actionType, dst, err := assertAction(act)
 	if err != nil {
 		return nil, err
