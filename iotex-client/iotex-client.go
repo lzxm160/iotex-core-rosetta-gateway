@@ -268,7 +268,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	for _, act := range actionInfo {
 		decode, err := decodeAction(act, client)
 		if err != nil {
-			continue
+			return
 		}
 		if decode != nil {
 			ret = append(ret, decode)
