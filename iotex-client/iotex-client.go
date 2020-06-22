@@ -398,8 +398,6 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		actionType = CandidateRegister
 	case act.GetAction().GetCore().GetCandidateUpdate() != nil:
 		actionType = CandidateUpdate
-	case act.GetAction().GetCore().GetPutPollResult() != nil:
-		actionType = PutPollResult
 	}
 	if amount == "0" || actionType == "" {
 		return nil, nil

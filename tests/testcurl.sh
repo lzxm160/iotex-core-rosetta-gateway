@@ -62,7 +62,7 @@ curl -X POST --data '{
     "network_identifier": {
         "blockchain": "IoTex",
         "network": "testnet"},
-    "block_identifier": {"index": 3252241}}' http://127.0.0.1:8080/block
+    "block_identifier": {"index": 3252961}}' http://127.0.0.1:8080/block
 # ClaimFromRewardingFund action
 
 # Execution multisend
