@@ -69,4 +69,7 @@ curl -X POST --data '{
     "network_identifier": {
         "blockchain": "IoTex",
         "network": "testnet"},
-    "block_identifier": {"index": 4033439}}' http://127.0.0.1:8080/block
+    "block_identifier": {"index": 4034780}}' http://127.0.0.1:8080/block
+#response:
+#{"code":12,"message":"unable to get block","retriable":true}
+#rpc error: code = Unavailable desc = evm transfer index not supported

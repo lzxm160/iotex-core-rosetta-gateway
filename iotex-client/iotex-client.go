@@ -345,6 +345,23 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if err != nil {
 		return nil, err
 	}
+	// if gasFee is 0
+	if gasFee.Sign() != 1 {
+		return nil, nil
+	}
+	sender := addressAmountList{{address: act.Sender, amount: "-" + gasFee.String()}}
+	var oper []*types.Operation
+	_, oper, err = addOperation(sender, "fee", status, 0, oper)
+	if err != nil {
+		return nil, err
+	}
+	ret = &types.Transaction{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			act.ActHash,
+		},
+		Operations: oper,
+		Metadata:   nil,
+	}
 	var actionType, dst string
 	amount := "0"
 	senderSign := "-"
@@ -357,7 +374,8 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	case act.GetAction().GetCore().GetExecution() != nil:
 		fmt.Println(Execution)
 		// this one need special handler
-		return handleExecution(gasFee, status, act.ActHash, act.GetAction().GetCore().GetExecution(), client)
+		err = handleExecution(ret, status, act.ActHash, client)
+		return
 	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
 		fmt.Println(DepositToRewardingFund)
 		actionType = DepositToRewardingFund
@@ -398,36 +416,31 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		actionType = "default"
 		fmt.Println("default")
 	}
-	fmt.Println("actionType", actionType)
-	amountInt, ok := new(big.Int).SetString(amount, 10)
-	if !ok {
-		return nil, errors.New("convert amount error")
-	}
-	amountInt = amountInt.Add(amountInt, gasFee)
-	fmt.Println("amountInt", amountInt.String())
-	// if amount+gas fee is 0 just return
-	if amountInt.Sign() != 1 {
+	if amount == "0" {
 		return nil, nil
 	}
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
-		senderAmountWithSign = senderSign + amountInt.String()
+		senderAmountWithSign = senderSign + amount
 		dstAmountWithSign = amount
 	} else {
-		senderAmountWithSign = amountInt.String()
+		senderAmountWithSign = amount
 		dstAmountWithSign = "-" + amount
 	}
 	src := []*addressAmount{{
 		address: act.Sender,
 		amount:  senderAmountWithSign}}
-	dstAll := []*addressAmount{{
-		address: dst,
-		amount:  dstAmountWithSign}}
-	return packTransaction(src, dstAll, actionType, status, act.ActHash)
+	var dstAll []*addressAmount
+	if dst != "" {
+		dstAll = []*addressAmount{{
+			address: dst,
+			amount:  dstAmountWithSign}}
+	}
+	err = packTransaction(ret, src, dstAll, actionType, status, act.ActHash)
+	return
 }
 
-func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes.Execution, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
-	fmt.Println("handleExecution gasFee", gasFee)
+func handleExecution(ret *types.Transaction, status, hash string, client iotexapi.APIServiceClient) (err error) {
 	fmt.Println("handleExecution status,hash", status, hash)
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
 		ActionHash: hash,
@@ -439,22 +452,18 @@ func handleExecution(gasFee *big.Int, status, hash string, execution *iotextypes
 	}
 	fmt.Println("len resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	var src, dst addressAmountList
-	for i, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
-		amount := new(big.Int).SetBytes(transfer.Amount)
-		if i == 0 {
-			amount = amount.Add(amount, gasFee)
-		}
+	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
 		// put gasFee in first from address
 		src = append(src, &addressAmount{
 			address: transfer.From,
-			amount:  "-" + amount.String(),
+			amount:  "-" + new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 		dst = append(dst, &addressAmount{
 			address: transfer.To,
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return packTransaction(src, dst, Execution, status, hash)
+	return packTransaction(ret, src, dst, Execution, status, hash)
 }
 
 func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (gasFee *big.Int, status string, err error) {
@@ -479,25 +488,19 @@ func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient)
 	return
 }
 
-func packTransaction(src, dst addressAmountList, actionType, status, hash string) (ret *types.Transaction, err error) {
+func packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status, hash string) (err error) {
 	sort.Sort(src)
 	sort.Sort(dst)
 	var oper []*types.Operation
 	endIndex, oper, err := addOperation(src, actionType, status, 0, oper)
 	if err != nil {
-		return nil, err
+		return
 	}
 	_, oper, err = addOperation(dst, actionType, status, endIndex, oper)
 	if err != nil {
-		return nil, err
+		return
 	}
-	ret = &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			hash,
-		},
-		Operations: oper,
-		Metadata:   nil,
-	}
+	ret.Operations = append(ret.Operations, oper...)
 	return
 }
 
