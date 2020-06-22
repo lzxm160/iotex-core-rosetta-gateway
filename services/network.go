@@ -95,16 +95,25 @@ func (s *networkAPIService) NetworkOptions(
 		Allow: &types.Allow{
 			OperationStatuses: []*types.OperationStatus{
 				{
-					Status:     "success",
+					Status:     ic.StatusSuccess,
 					Successful: true,
 				},
 				{
-					Status:     "fail",
+					Status:     ic.StatusFail,
 					Successful: false,
 				},
 			},
-			OperationTypes: []string{"transfer", "fee"},
-			Errors:         ErrorList,
+			OperationTypes: []string{
+				ic.ActionTypeFee,
+				ic.Transfer,
+				ic.Execution,
+				ic.DepositToRewardingFund,
+				ic.ClaimFromRewardingFund,
+				ic.StakeCreate,
+				ic.StakeWithdraw,
+				ic.StakeAddDeposit,
+				ic.CandidateRegister},
+			Errors: ErrorList,
 		},
 	}, nil
 }

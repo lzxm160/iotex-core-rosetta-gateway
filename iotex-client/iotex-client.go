@@ -20,39 +20,17 @@ import (
 )
 
 const (
-	// Transfer action type
-	Transfer = "transfer"
-	// Execution action type
-	Execution = "execution"
-	// DepositToRewardingFund action type
+	Transfer               = "transfer"
+	Execution              = "execution"
 	DepositToRewardingFund = "depositToRewardingFund"
-	// ClaimFromRewardingFund action type
 	ClaimFromRewardingFund = "claimFromRewardingFund"
-	// StakeCreate action type
-	StakeCreate = "stakeCreate"
-	// GrantReward action type
-	GrantReward = "grantReward"
-	// StakeUnstake action type
-	StakeUnstake = "stakeUnstake"
-	// StakeWithdraw action type
-	StakeWithdraw = "stakeWithdraw"
-	// StakeAddDeposit action type
-	StakeAddDeposit = "stakeAddDeposit"
-	// StakeRestake action type
-	StakeRestake = "stakeRestake"
-	// StakeChangeCandidate action type
-	StakeChangeCandidate = "stakeChangeCandidate"
-	// StakeTransferOwnership action type
-	StakeTransferOwnership = "stakeTransferOwnership"
-	// CandidateRegister action type
-	CandidateRegister = "candidateRegister"
-	// CandidateUpdate action type
-	CandidateUpdate = "candidateUpdate"
-	// PutPollResult action type
-	PutPollResult = "putPollResult"
-	statusSuccess = "success"
-	statusFail    = "fail"
-	actionTypeFee = "fee"
+	StakeCreate            = "stakeCreate"
+	StakeWithdraw          = "stakeWithdraw"
+	StakeAddDeposit        = "stakeAddDeposit"
+	CandidateRegister      = "candidateRegister"
+	StatusSuccess          = "success"
+	StatusFail             = "fail"
+	ActionTypeFee          = "fee"
 )
 
 var IoTexCurrency = &types.Currency{
@@ -406,9 +384,9 @@ func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient)
 	if err != nil {
 		return
 	}
-	status = statusSuccess
+	status = StatusSuccess
 	if responseReceipt.GetReceiptInfo().GetReceipt().GetStatus() != 1 {
-		status = statusFail
+		status = StatusFail
 	}
 
 	gasConsumed := new(big.Int).SetUint64(responseReceipt.GetReceiptInfo().GetReceipt().GetGasConsumed())
@@ -424,7 +402,7 @@ func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient)
 	}
 	sender := addressAmountList{{address: act.Sender, amount: "-" + gasFee.String()}}
 	var oper []*types.Operation
-	_, oper, err = addOperation(sender, actionTypeFee, status, 0, oper)
+	_, oper, err = addOperation(sender, ActionTypeFee, status, 0, oper)
 	if err != nil {
 		return nil, "", err
 	}
