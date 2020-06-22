@@ -57,14 +57,6 @@ curl -X POST --data '{
 #response:
 #{"block":{"block_identifier":{"index":390873,"hash":"5c084459315fcf0839ed9f2d8b89ca8fb039695a56007a071e5ce9d3c8908d95"},"parent_block_identifier":{"index":390872,"hash":"3ae76de97535f4908d7dd6b2d5f232543b1e5a9fe80a0e9d8f91fdd27d9363eb"},"timestamp":1573620900000,"transactions":[{"transaction_identifier":{"hash":"b37d5db44bd3dc182617b56744e12cab94486808eae1dc401599b611ed388164"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IoTex","decimals":18}}},{"operation_identifier":{"index":1},"type":"transfer","status":"success","account":{"address":"io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"},"amount":{"value":"-10000000000000000000","currency":{"symbol":"IoTex","decimals":18}}},{"operation_identifier":{"index":2},"type":"transfer","status":"success","account":{"address":"io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"},"amount":{"value":"10000000000000000000","currency":{"symbol":"IoTex","decimals":18}}}]}]}}
 
-# DepositToRewardingFund action
-curl -X POST --data '{
-    "network_identifier": {
-        "blockchain": "IoTex",
-        "network": "testnet"},
-    "block_identifier": {"index": 3252961}}' http://127.0.0.1:8080/block
-# ClaimFromRewardingFund action
-
 # Execution multisend
 curl -X POST --data '{
     "network_identifier": {

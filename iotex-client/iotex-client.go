@@ -5,20 +5,16 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/iotexproject/iotex-antenna-go/v2/iotex"
 	"github.com/iotexproject/iotex-proto/golang/iotexapi"
 	"github.com/iotexproject/iotex-proto/golang/iotextypes"
 )
@@ -144,7 +140,7 @@ func NewIoTexClient(grpcAddr string, cfgPath string) (cli IoTexClient, err error
 	if err != nil {
 		return
 	}
-	grpc, err := newDefaultGRPCConn(grpcAddr)
+	grpc, err := grpc.Dial(grpcAddr, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 	if err != nil {
 		return
 	}
@@ -167,7 +163,6 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	} else {
 		parentHeight = uint64(height) - 1
 	}
-	fmt.Println(parentHeight, height)
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	count := uint64(2)
 	if parentHeight == uint64(height) {
@@ -323,24 +318,9 @@ func (c *grpcIoTexClient) reconnect() (err error) {
 	// Check if the existing connection is good.
 	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
 		return
-	} else {
-		// Connection needs to be re-established.
-		c.grpcConn = nil
 	}
-	c.grpcConn, err = iotex.NewDefaultGRPCConn(c.endpoint)
+	c.grpcConn, err = grpc.Dial(c.endpoint, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 	return err
-}
-
-// newDefaultGRPCConn creates a default grpc connection. With tls and retry.
-func newDefaultGRPCConn(endpoint string) (*grpc.ClientConn, error) {
-	opts := []grpc_retry.CallOption{
-		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(10 * time.Second)),
-		grpc_retry.WithMax(3),
-	}
-	return grpc.Dial(endpoint,
-		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
-		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 }
 
 func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
@@ -360,7 +340,6 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if amount == "0" || actionType == "" {
 		return nil, nil
 	}
-	fmt.Println("actionType", actionType)
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
 		senderAmountWithSign = senderSign + amount
@@ -379,19 +358,15 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 }
 
 func handleExecution(ret *types.Transaction, status, hash string, client iotexapi.APIServiceClient) (err error) {
-	fmt.Println("handleExecution status,hash", status, hash)
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
 		ActionHash: hash,
 	}
 	resp, err := client.GetEvmTransfersByActionHash(context.Background(), request)
 	if err != nil {
-		fmt.Println("GetEvmTransfersByActionHash", err)
 		return
 	}
-	fmt.Println("len resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	var src, dst addressAmountList
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
-		// put gasFee in first from address
 		src = append(src, &addressAmount{
 			address: transfer.From,
 			amount:  "-" + new(big.Int).SetBytes(transfer.Amount).String(),
@@ -508,7 +483,7 @@ func assertAction(act *iotexapi.ActionInfo) (amount, senderSign, actionType, dst
 		actionType = StakeCreate
 		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
 	case act.GetAction().GetCore().GetStakeWithdraw() != nil:
-		// TODO need to add this when this is available in iotex-core
+		// TODO need to add amount when it's available on iotex-core
 		actionType = StakeCreate
 	case act.GetAction().GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
