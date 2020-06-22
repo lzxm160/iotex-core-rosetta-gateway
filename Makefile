@@ -52,17 +52,11 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
-.PHONY: test2
-test2: build tests/rosetta-cli
+.PHONY: test
+test: build tests/rosetta-cli
 	@echo "Running tests...\n"
 	@chmod +x ./tests/test.sh
 	@./tests/test.sh
-
-.PHONY: test
-test:
-	@echo "Running tests...\n"
-	@chmod +x ./tests/testcurl.sh
-	@./tests/testcurl.sh
 
 .PHONY: clean
 clean:
