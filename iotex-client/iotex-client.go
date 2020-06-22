@@ -348,56 +348,14 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if err != nil {
 		return
 	}
-
-	var actionType, dst string
-	amount := "0"
-	senderSign := "-"
-	switch {
-	case act.GetAction().GetCore().GetTransfer() != nil:
-		actionType = Transfer
-		amount = act.GetAction().GetCore().GetTransfer().GetAmount()
-		dst = act.GetAction().GetCore().GetTransfer().GetRecipient()
-		fmt.Println(Transfer, amount, dst)
-	case act.GetAction().GetCore().GetExecution() != nil:
-		fmt.Println(Execution)
+	if act.GetAction().GetCore().GetExecution() != nil {
 		// this one need special handler,TODO test when testnet enable systemlog
 		err = handleExecution(ret, status, act.ActHash, client)
 		return
-	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
-		// TODO test for this action
-		fmt.Println(DepositToRewardingFund)
-		actionType = DepositToRewardingFund
-		amount = act.GetAction().GetCore().GetDepositToRewardingFund().GetAmount()
-	case act.GetAction().GetCore().GetClaimFromRewardingFund() != nil:
-		// TODO test for this action
-		fmt.Println(ClaimFromRewardingFund)
-		actionType = ClaimFromRewardingFund
-		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
-		senderSign = "+"
-	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
-		// TODO test for this action
-		fmt.Println(StakeAddDeposit)
-		actionType = StakeAddDeposit
-		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
-	case act.GetAction().GetCore().GetStakeCreate() != nil:
-		actionType = StakeCreate
-		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
-	// TODO need to add this when this is available in iotex-core
-	//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
-	case act.GetAction().GetCore().GetGrantReward() != nil:
-		actionType = GrantReward
-	case act.GetAction().GetCore().GetStakeUnstake() != nil:
-		actionType = StakeUnstake
-	case act.GetAction().GetCore().GetStakeRestake() != nil:
-		actionType = StakeRestake
-	case act.GetAction().GetCore().GetStakeChangeCandidate() != nil:
-		actionType = StakeChangeCandidate
-	case act.GetAction().GetCore().GetStakeTransferOwnership() != nil:
-		actionType = StakeTransferOwnership
-	case act.GetAction().GetCore().GetCandidateRegister() != nil:
-		actionType = CandidateRegister
-	case act.GetAction().GetCore().GetCandidateUpdate() != nil:
-		actionType = CandidateUpdate
+	}
+	amount, senderSign, actionType, dst, err := assertAction(act)
+	if err != nil {
+		return nil, err
 	}
 	if amount == "0" || actionType == "" {
 		return nil, nil
@@ -526,4 +484,35 @@ func addOperation(l addressAmountList, actionType, status string, startIndex int
 		startIndex++
 	}
 	return startIndex, oper, nil
+}
+
+func assertAction(act *iotexapi.ActionInfo) (amount, senderSign, actionType, dst string, err error) {
+	amount = "0"
+	senderSign = "-"
+	switch {
+	case act.GetAction().GetCore().GetTransfer() != nil:
+		actionType = Transfer
+		amount = act.GetAction().GetCore().GetTransfer().GetAmount()
+		dst = act.GetAction().GetCore().GetTransfer().GetRecipient()
+	case act.GetAction().GetCore().GetDepositToRewardingFund() != nil:
+		actionType = DepositToRewardingFund
+		amount = act.GetAction().GetCore().GetDepositToRewardingFund().GetAmount()
+	case act.GetAction().GetCore().GetClaimFromRewardingFund() != nil:
+		actionType = ClaimFromRewardingFund
+		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
+		senderSign = "+"
+	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
+		actionType = StakeAddDeposit
+		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
+	case act.GetAction().GetCore().GetStakeCreate() != nil:
+		actionType = StakeCreate
+		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
+	case act.GetAction().GetCore().GetStakeWithdraw() != nil:
+		// TODO need to add this when this is available in iotex-core
+		actionType = StakeCreate
+	case act.GetAction().GetCore().GetCandidateRegister() != nil:
+		actionType = CandidateRegister
+		amount = act.GetAction().GetCore().GetCandidateRegister().GetStakedAmount()
+	}
+	return
 }
