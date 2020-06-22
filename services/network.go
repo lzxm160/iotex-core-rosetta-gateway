@@ -95,8 +95,12 @@ func (s *networkAPIService) NetworkOptions(
 		Allow: &types.Allow{
 			OperationStatuses: []*types.OperationStatus{
 				{
-					Status:     "OK",
+					Status:     "success",
 					Successful: true,
+				},
+				{
+					Status:     "fail",
+					Successful: false,
 				},
 			},
 			OperationTypes: []string{"transfer", "fee"},
