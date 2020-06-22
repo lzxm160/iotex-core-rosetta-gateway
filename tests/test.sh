@@ -27,5 +27,5 @@ rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
 rm -rf ./test/rosetta*
-pkill -P $$
+
 printf "${GRN}### Tests finished.${OFF}\n"
