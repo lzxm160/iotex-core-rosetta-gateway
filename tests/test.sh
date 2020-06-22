@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-
+set -o nounset -o pipefail -o errexit
+trap "exit 1" INT
 # Kill all dangling processes on exit.
 cleanup() {
 	printf "${OFF}"
