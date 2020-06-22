@@ -55,3 +55,11 @@ curl -X POST --data '{
 }' http://127.0.0.1:8080/construction/submit
 #response:
 #{"transaction_identifier":{"hash":"292cda920534be56c78d6f13686dc7dbb94b77714b93abefb9f1e18679e2ae27"}}
+
+# DepositToRewardingFund action
+curl -X POST --data '{
+    "network_identifier": {
+        "blockchain": "IoTex",
+        "network": "testnet"},
+    "block_identifier": {"index": 3252241}}' http://127.0.0.1:8080/block
+# ClaimFromRewardingFund action

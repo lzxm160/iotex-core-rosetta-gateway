@@ -351,31 +351,25 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
 		senderSign = "+"
 	case act.GetAction().GetCore().GetStakeAddDeposit() != nil:
-		// TODO need to check this
 		actionType = StakeAddDeposit
 		amount = act.GetAction().GetCore().GetClaimFromRewardingFund().GetAmount()
-	//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
 	case act.GetAction().GetCore().GetStakeCreate() != nil:
-		// TODO need to check this
 		actionType = StakeCreate
 		amount = act.GetAction().GetCore().GetStakeCreate().GetStakedAmount()
-		//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
+		// TODO need to add this when this is available in iotex-core
 		//case act.GetAction().GetCore().GetStakeWithdraw() != nil:
-		//	// TODO need to check this
-		//	actionType = StakeAddDeposit
-		//	amount = act.GetAction().GetCore().GetStakeWithdraw()()
-		//des = act.GetAction().GetCore().GetClaimFromRewardingFund()
-		//senderSign = "+"
+
 	}
 
-	if amount == "0" {
-		return nil, nil
-	}
 	amountInt, ok := new(big.Int).SetString(amount, 10)
 	if !ok {
 		return nil, errors.New("convert amount error")
 	}
 	amountInt = amountInt.Add(amountInt, gasFee)
+	// if amount+gas fee is 0 just return
+	if amountInt.Sign() != 1 {
+		return nil, nil
+	}
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
 		senderAmountWithSign = senderSign + amountInt.String()
