@@ -1,3 +1,9 @@
+// Copyright (c) 2020 IoTeX Foundation
+// This is an alpha (internal) release and is not suitable for production. This source code is provided 'as is' and no
+// warranties are given as to title or non-infringement, merchantability or fitness for purpose and, to the extent
+// permitted by law, all liability for your use of the code is disclaimed. This source code is governed by Apache
+// License 2.0 that can be found in the LICENSE file.
+
 package iotex_client
 
 import (
@@ -70,15 +76,18 @@ type (
 		// at given height.
 		GetAccount(ctx context.Context, height int64, owner string) (*Account, error)
 
-		// SubmitTx submits the given JSON-encoded transaction to the node.
+		// SubmitTx submits the given encoded transaction to the node.
 		SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error)
 
 		// GetStatus returns the status overview of the node.
 		GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error)
+
 		// GetVersion returns the server's version.
 		GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error)
+
 		// GetTransactions returns transactions of the block.
 		GetTransactions(ctx context.Context, height int64) ([]*types.Transaction, error)
+
 		// GetConfig returns the config.
 		GetConfig() *Config
 	}
@@ -134,55 +143,6 @@ func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTe
 	c.Lock()
 	defer c.Unlock()
 	return c.getBlock(ctx, height)
-}
-
-func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
-	err = c.reconnect()
-	if err != nil {
-		return
-	}
-	var parentHeight uint64
-	if height <= 1 {
-		parentHeight = 1
-	} else {
-		parentHeight = uint64(height) - 1
-	}
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	count := uint64(2)
-	if parentHeight == uint64(height) {
-		count = 1
-	}
-	request := &iotexapi.GetBlockMetasRequest{
-		Lookup: &iotexapi.GetBlockMetasRequest_ByIndex{
-			ByIndex: &iotexapi.GetBlockMetasByIndexRequest{
-				Start: parentHeight,
-				Count: count,
-			},
-		},
-	}
-	resp, err := client.GetBlockMetas(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.BlkMetas) == 0 {
-		return nil, errors.New("not found")
-	}
-	var blk, parentBlk *iotextypes.BlockMeta
-	if len(resp.BlkMetas) == 2 {
-		blk = resp.BlkMetas[1]
-		parentBlk = resp.BlkMetas[0]
-	} else {
-		blk = resp.BlkMetas[0]
-		parentBlk = resp.BlkMetas[0]
-	}
-	ret = &IoTexBlock{
-		Height:       int64(blk.Height),
-		Hash:         blk.Hash,
-		Timestamp:    blk.Timestamp.Seconds * 1e3, // ms
-		ParentHeight: int64(parentHeight),
-		ParentHash:   parentBlk.Hash,
-	}
-	return
 }
 
 func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, error) {
@@ -247,7 +207,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 				},
 			},
 		}
-		res, err := client.GetActions(context.Background(), request)
+		res, err := client.GetActions(ctx, request)
 		if err != nil {
 			break
 		}
@@ -255,9 +215,10 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	}
 	ret = make([]*types.Transaction, 0)
 	for _, act := range actionInfo {
-		decode, err := decodeAction(act, client)
+		decode, err := decodeAction(ctx, act, client)
 		if err != nil {
 			// change to continue when systemlog is disabled in testnet
+			// TODO change it back
 			//return nil, err
 			continue
 		}
@@ -310,6 +271,55 @@ func (c *grpcIoTexClient) GetConfig() *Config {
 	return c.cfg
 }
 
+func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
+	err = c.reconnect()
+	if err != nil {
+		return
+	}
+	var parentHeight uint64
+	if height <= 1 {
+		parentHeight = 1
+	} else {
+		parentHeight = uint64(height) - 1
+	}
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	count := uint64(2)
+	if parentHeight == uint64(height) {
+		count = 1
+	}
+	request := &iotexapi.GetBlockMetasRequest{
+		Lookup: &iotexapi.GetBlockMetasRequest_ByIndex{
+			ByIndex: &iotexapi.GetBlockMetasByIndexRequest{
+				Start: parentHeight,
+				Count: count,
+			},
+		},
+	}
+	resp, err := client.GetBlockMetas(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.BlkMetas) == 0 {
+		return nil, errors.New("not found")
+	}
+	var blk, parentBlk *iotextypes.BlockMeta
+	if len(resp.BlkMetas) == 2 {
+		blk = resp.BlkMetas[1]
+		parentBlk = resp.BlkMetas[0]
+	} else {
+		blk = resp.BlkMetas[0]
+		parentBlk = resp.BlkMetas[0]
+	}
+	ret = &IoTexBlock{
+		Height:       int64(blk.Height),
+		Hash:         blk.Hash,
+		Timestamp:    blk.Timestamp.Seconds * 1e3, // ms
+		ParentHeight: int64(parentHeight),
+		ParentHash:   parentBlk.Hash,
+	}
+	return
+}
+
 func (c *grpcIoTexClient) reconnect() (err error) {
 	// Check if the existing connection is good.
 	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
@@ -319,15 +329,17 @@ func (c *grpcIoTexClient) reconnect() (err error) {
 	return err
 }
 
-func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
-	ret, status, err := gasFeeAndStatus(act, client)
+func decodeAction(ctx context.Context, act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.
+	Transaction,
+	err error) {
+	ret, status, err := gasFeeAndStatus(ctx, act, client)
 	if err != nil {
 		return
 	}
 
 	if act.GetAction().GetCore().GetExecution() != nil {
 		// this one need special handler,TODO test when testnet enable systemlog
-		err = handleExecution(ret, status, act.ActHash, client)
+		err = handleExecution(ctx, ret, status, act.ActHash, client)
 		return
 	}
 
@@ -351,15 +363,16 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
-	err = packTransaction(ret, src, dstAll, actionType, status, act.ActHash)
+	err = packTransaction(ret, src, dstAll, actionType, status)
 	return
 }
 
-func handleExecution(ret *types.Transaction, status, hash string, client iotexapi.APIServiceClient) (err error) {
+func handleExecution(ctx context.Context, ret *types.Transaction, status, hash string,
+	client iotexapi.APIServiceClient) (err error) {
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
 		ActionHash: hash,
 	}
-	resp, err := client.GetEvmTransfersByActionHash(context.Background(), request)
+	resp, err := client.GetEvmTransfersByActionHash(ctx, request)
 	if err != nil {
 		return
 	}
@@ -374,11 +387,10 @@ func handleExecution(ret *types.Transaction, status, hash string, client iotexap
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return packTransaction(ret, src, dst, Execution, status, hash)
+	return packTransaction(ret, src, dst, Execution, status)
 }
 
-func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, status string, err error) {
-	ctx := context.Background()
+func gasFeeAndStatus(ctx context.Context, act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (ret *types.Transaction, status string, err error) {
 	requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: act.GetActHash()}
 	responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
 	if err != nil {
@@ -416,7 +428,7 @@ func gasFeeAndStatus(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient)
 	return
 }
 
-func packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status, hash string) (err error) {
+func packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string) (err error) {
 	sort.Sort(src)
 	sort.Sort(dst)
 	var oper []*types.Operation

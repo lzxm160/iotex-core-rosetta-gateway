@@ -15,5 +15,5 @@ To clean-up:
 	make clean
 
 
-`make test` will automatically download and build the [rosetta-cli](https://github.com/coinbase/rosetta-cli),then run
+`make test` will automatically download and build the [rosetta-cli](https://github.com/coinbase/rosetta-cli) ,then run
  the gateway and validate it using `rosetta-cli`.

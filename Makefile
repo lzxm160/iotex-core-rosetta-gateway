@@ -61,7 +61,7 @@ test: build tests/rosetta-cli
 .PHONY: clean
 clean:
 	@echo "Cleaning..."
-	@rm -rf ./tests/rosetta-cli.tar.gz tests/rosetta-cli
+	@rm -rf ./tests/rosetta*
 	@rm -rf ./$(BUILD_TARGET_SERVER)
 	@rm -rf $(COV_REPORT) $(COV_HTML) $(LINT_LOG)
 	@find . -name $(COV_OUT) -delete
