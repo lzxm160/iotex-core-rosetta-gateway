@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"sort"
@@ -262,12 +261,13 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		}
 		actionInfo = append(actionInfo, res.ActionInfo...)
 	}
-	fmt.Println("265")
 	ret = make([]*types.Transaction, 0)
 	for _, act := range actionInfo {
 		decode, err := decodeAction(act, client)
 		if err != nil {
-			return nil, err
+			// change to continue when systemlog is disabled in testnet
+			//return nil, err
+			continue
 		}
 		if decode != nil {
 			ret = append(ret, decode)
@@ -329,12 +329,13 @@ func decodeAction(act *iotexapi.ActionInfo, client iotexapi.APIServiceClient) (r
 	if err != nil {
 		return
 	}
+
 	if act.GetAction().GetCore().GetExecution() != nil {
 		// this one need special handler,TODO test when testnet enable systemlog
 		err = handleExecution(ret, status, act.ActHash, client)
 		return
 	}
-	fmt.Println("decodeAction 337")
+
 	amount, senderSign, actionType, dst, err := assertAction(act)
 	if err != nil {
 		return nil, err
