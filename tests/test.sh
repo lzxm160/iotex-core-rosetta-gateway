@@ -4,7 +4,7 @@ set -o nounset -o pipefail -o errexit
 # Kill all dangling processes on exit.
 cleanup() {
 	printf "${OFF}"
-	kill -9 $(pidof iotex-core-rosetta-gateway) >/dev/null 2>&1
+	kill -9 $(pidof iotex-core-rosetta-gateway)
 	wait
 	pkill -P $$ || true
 	wait
@@ -14,9 +14,10 @@ trap "cleanup" EXIT
 # ANSI escape codes to brighten up the output.
 GRN=$'\e[32;1m'
 OFF=$'\e[0m'
-GW="./run.sh"
+GW="./iotex-core-rosetta-gateway"
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 cd ..
+go build -o ./iotex-core-rosetta-gateway .
 ${GW} &
 
 sleep 3
