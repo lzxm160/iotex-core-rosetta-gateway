@@ -16,6 +16,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/iotexproject/go-pkgs/crypto"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/iotexproject/go-pkgs/hash"
@@ -196,6 +198,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			// change to continue or return when systemlog is enabled in testnet
 			// TODO change it back
 			//return nil, err
+			fmt.Println(err)
 			continue
 		}
 		if decode != nil {
@@ -302,7 +305,11 @@ func (c *grpcIoTexClient) reconnect() (err error) {
 }
 
 func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
-	callerAddr, err := address.FromBytes(act.GetSenderPubKey())
+	srcPub, err := crypto.BytesToPublicKey(act.GetSenderPubKey())
+	if err != nil {
+		return
+	}
+	callerAddr, err := address.FromBytes(srcPub.Hash())
 	if err != nil {
 		return
 	}
