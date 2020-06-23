@@ -32,6 +32,6 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
-rm -rf ./test/rosetta*
-rm -rf ./test/config.json
+rm -rf ./rosetta*
+rm -rf ./config.json
 printf "${GRN}### Tests finished.${OFF}\n"
