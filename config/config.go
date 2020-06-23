@@ -26,7 +26,7 @@ type (
 		RosettaVersion string `yaml:"rosettaVersion"`
 	}
 	Config struct {
-		NetworkIdentifier NetworkIdentifier `yaml:"networkIdentifier"`
+		NetworkIdentifier NetworkIdentifier `yaml:"network_identifier"`
 		Currency          Currency          `yaml:"currency"`
 		Server            Server            `yaml:"server"`
 	}

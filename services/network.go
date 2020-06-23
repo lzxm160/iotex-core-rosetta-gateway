@@ -98,7 +98,7 @@ func (s *networkAPIService) NetworkOptions(
 
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion: "1.3.5",
+			RosettaVersion: s.client.GetConfig().Server.RosettaVersion,
 			NodeVersion:    version.GetServerMeta().GetPackageVersion(),
 		},
 		Allow: &types.Allow{

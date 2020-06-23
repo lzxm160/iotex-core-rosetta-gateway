@@ -19,6 +19,7 @@ ${GW} &
 
 sleep 3
 
+
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 cd tests
 ./rosetta-cli check --lookup-balance-by-block false --end 10 --bootstrap-balances ./bootstrap_balances.json --block-concurrency 4
