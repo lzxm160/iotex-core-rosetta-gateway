@@ -9,5 +9,7 @@ require (
 	github.com/iotexproject/iotex-antenna-go/v2 v2.3.2
 	github.com/iotexproject/iotex-core v1.0.0
 	github.com/iotexproject/iotex-proto v0.3.0
+	github.com/pkg/errors v0.8.1
+	go.uber.org/config v1.3.1
 	google.golang.org/grpc v1.29.1
 )
