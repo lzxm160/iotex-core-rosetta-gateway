@@ -4,6 +4,7 @@ trap "exit 1" INT
 # Kill all dangling processes on exit.
 cleanup() {
 	printf "${OFF}"
+	kill -9 $(pidof iotex-core-rosetta-gateway)
 	pkill -P $$ || true
 	wait || true
 }
