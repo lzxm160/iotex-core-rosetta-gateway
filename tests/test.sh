@@ -31,5 +31,5 @@ rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
 rm -rf ./test/rosetta*
-rm -rf ./*.json
+rm -rf ./test/config.json
 printf "${GRN}### Tests finished.${OFF}\n"
