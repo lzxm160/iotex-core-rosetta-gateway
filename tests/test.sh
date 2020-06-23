@@ -5,9 +5,9 @@ set -o nounset -o pipefail -o errexit
 cleanup() {
 	printf "${OFF}"
 	kill -9 $(pidof iotex-core-rosetta-gateway)
-	wait
+	wait || true
 	pkill -P $$ || true
-	wait
+	wait || true
 }
 trap "cleanup" EXIT
 
