@@ -4,10 +4,8 @@ set -o nounset -o pipefail -o errexit
 # Kill all dangling processes on exit.
 cleanup() {
 	printf "${OFF}"
-	kill -9 $(pidof iotex-core-rosetta-gateway)
-	wait || true
+	kill -9 $(pidof iotex-core-rosetta-gateway) >/dev/null 2>&1
 	pkill -P $$ || true
-	wait || true
 }
 trap "cleanup" EXIT
 
