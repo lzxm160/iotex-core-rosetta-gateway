@@ -55,8 +55,12 @@ func (s *accountAPIService) AccountBalance(
 		},
 		Balances: []*types.Amount{
 			&types.Amount{
-				Value:    acc.Balance,
-				Currency: IoTexCurrency,
+				Value: acc.Balance,
+				Currency: &types.Currency{
+					Symbol:   s.client.GetConfig().Currency.Symbol,
+					Decimals: s.client.GetConfig().Currency.Decimals,
+					Metadata: nil,
+				},
 			},
 		},
 		Metadata: &md,
