@@ -173,7 +173,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	for _, act := range blk.GetBlock().GetBody().GetActions() {
 		proto, err := proto.Marshal(act)
 		if err != nil {
-			return
+			return nil, err
 		}
 		actionMap[hash.Hash256b(proto)] = act
 	}
