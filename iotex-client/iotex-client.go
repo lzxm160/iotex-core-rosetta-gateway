@@ -163,6 +163,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		Count:        1,
 		WithReceipts: true,
 	})
+	fmt.Println("len(getRawBlocksRes.GetBlocks())", len(getRawBlocksRes.GetBlocks()))
 	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
 		return
 	}
@@ -176,8 +177,12 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			return nil, err
 		}
 		actionMap[hash.Hash256b(proto)] = act
+		temp := hash.Hash256b(proto)
+		fmt.Println("act hash", hex.EncodeToString(temp[:]))
 	}
 	for _, receipt := range blk.GetReceipts() {
+		temp := hash.BytesToHash256(receipt.ActHash)
+		fmt.Println("receipt hash", hex.EncodeToString(temp[:]))
 		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
 	}
 	for h, act := range actionMap {
