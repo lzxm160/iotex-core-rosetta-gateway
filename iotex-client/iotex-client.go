@@ -322,10 +322,10 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	amount, senderSign, actionType, dst, err := assertAction(act)
 	fmt.Println(amount, senderSign, actionType, dst, err)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if amount == "0" || actionType == "" {
-		return nil, nil
+		return
 	}
 	var senderAmountWithSign, dstAmountWithSign string
 	if senderSign == "-" {
