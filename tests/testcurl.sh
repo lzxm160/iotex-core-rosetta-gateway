@@ -79,5 +79,14 @@ curl -X POST --data '{
 curl -X POST --data '{
     "network_identifier": {
         "blockchain": "IoTeX",
+        "network": "mainnet"},
+    "block_identifier": {"index": 5160923}}' http://127.0.0.1:8080/block
+#respone
+#{"block":{"block_identifier":{"index":5160923,"hash":"fe653d92713bbd0f438fb8426edc3daab10a2eef28aa95d81fdaab460dd52f8e"},"parent_block_identifier":{"index":5160922,"hash":"40a7de13ef6f183c6c5dbb4bcb18aad3cc78e56c0c2ced1c1e1602bc4cc5c5e9"},"timestamp":1591033570000,"transactions":[{"transaction_identifier":{"hash":"a7e60af13e75646293c412b96e959d5edb8c254d3a1bcd9b6d7536a1af37e7c6"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io180w8cmhrxpjjulry2g4zpyhm8mx933yhqkr4g6"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"candidateRegister","status":"success","account":{"address":"io180w8cmhrxpjjulry2g4zpyhm8mx933yhqkr4g6"},"amount":{"value":"-2000000000000000000000000","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
+
+# StakeAddDeposit
+curl -X POST --data '{
+    "network_identifier": {
+        "blockchain": "IoTeX",
         "network": "testnet"},
     "block_identifier": {"index": 5160923}}' http://127.0.0.1:8080/block
