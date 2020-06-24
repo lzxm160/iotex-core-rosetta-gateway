@@ -6,7 +6,6 @@ curl -X POST --data '{
     "account_identifier": {
         "address": "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
     }}' http://127.0.0.1:8080/account/balance
-
 #response:
 #{"block_identifier":{"index":4051388,"hash":"b2a68ad3dcc3c61ad6a0cec3431400a40a195def87251c9c60920d7fcf973f2f"},"balances":[{"value":"11989999999999999999","currency":{"symbol":"IOTX","decimals":18}}],"metadata":{"nonce":1}}
 
@@ -91,4 +90,4 @@ curl -X POST --data '{
         "network": "testnet"},
     "block_identifier": {"index": 4066726}}' http://127.0.0.1:8080/block
 #response
-#{"block":{"block_identifier":{"index":4066726,"hash":"de51a09829c13480da1e5bb11d3ee907cd79094d3c5acfa0e66daf88fcfac31a"},"parent_block_identifier":{"index":4066725,"hash":"c5c3ee4bfadfcea70dccca9056ccd48c1bfc122279059f32a08a78ad454a33cc"},"timestamp":1592960825000,"transactions":[{"transaction_identifier":{"hash":"c0477d9d735ce2b5cd7d9f8e48b1be113988dfa0147f4ffc4055dc4e38ff751c"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"stakeAddDeposit","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
+#{"block":{"block_identifier":{"index":4066726,"hash":"de51a09829c13480da1e5bb11d3ee907cd79094d3c5acfa0e66daf88fcfac31a"},"parent_block_identifier":{"index":4066725,"hash":"c5c3ee4bfadfcea70dccca9056ccd48c1bfc122279059f32a08a78ad454a33cc"},"timestamp":1592960825000,"transactions":[{"transaction_identifier":{"hash":"c0477d9d735ce2b5cd7d9f8e48b1be113988dfa0147f4ffc4055dc4e38ff751c"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"stakeAddDeposit","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-1000000000000000000","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
