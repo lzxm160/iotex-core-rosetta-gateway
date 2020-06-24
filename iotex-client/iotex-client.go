@@ -16,19 +16,19 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/iotexproject/go-pkgs/crypto"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/iotexproject/go-pkgs/hash"
-	"github.com/iotexproject/iotex-address/address"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/iotexproject/iotex-core-rosetta-gateway/config"
+	"github.com/iotexproject/go-pkgs/crypto"
+	"github.com/iotexproject/go-pkgs/hash"
+	"github.com/iotexproject/iotex-address/address"
 	"github.com/iotexproject/iotex-proto/golang/iotexapi"
 	"github.com/iotexproject/iotex-proto/golang/iotextypes"
+
+	"github.com/iotexproject/iotex-core-rosetta-gateway/config"
 )
 
 const (
