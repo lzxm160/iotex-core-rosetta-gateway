@@ -171,6 +171,8 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	ret = make([]*types.Transaction, 0)
 	actionMap := make(map[hash.Hash256]*iotextypes.Action)
 	receiptMap := make(map[hash.Hash256]*iotextypes.Receipt)
+	// hashSlice for fixed sequence,b/c map is unordered
+	hashSlice := make([]hash.Hash256, 0)
 	blk := getRawBlocksRes.GetBlocks()[0]
 	for _, act := range blk.GetBlock().GetBody().GetActions() {
 		proto, err := proto.Marshal(act)
@@ -178,11 +180,13 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			return nil, err
 		}
 		actionMap[hash.Hash256b(proto)] = act
+		hashSlice = append(hashSlice, hash.Hash256b(proto))
 	}
 	for _, receipt := range blk.GetReceipts() {
 		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
 	}
-	for h, act := range actionMap {
+	for _, h := range hashSlice {
+		act := actionMap[h]
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", hex.EncodeToString(h[:])))
