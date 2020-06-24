@@ -312,9 +312,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	if ret != nil {
-		fmt.Println("len(oper)", len(ret.Operations))
-	}
 
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
@@ -344,6 +341,9 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
 	err = c.packTransaction(ret, src, dstAll, actionType, status)
+	if ret != nil {
+		fmt.Println("len(ret.Operations)", len(ret.Operations))
+	}
 	return
 }
 
@@ -405,6 +405,7 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string) (err error) {
 	sort.Sort(src)
 	sort.Sort(dst)
+	fmt.Println("packTransaction", len(ret.Operations))
 	var oper []*types.Operation
 	endIndex, oper, err := c.addOperation(src, actionType, status, 1, oper)
 	if err != nil {
@@ -414,7 +415,7 @@ func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addre
 	if err != nil {
 		return
 	}
-	fmt.Println("packTransaction", len(ret.Operations))
+
 	fmt.Println("packTransaction oper", len(oper))
 	ret.Operations = append(ret.Operations, oper...)
 	return
