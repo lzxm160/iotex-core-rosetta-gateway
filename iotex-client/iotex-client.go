@@ -324,7 +324,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	if amount == "0" || actionType == "" {
+	if amount == "" || actionType == "" {
 		return
 	}
 	var senderAmountWithSign, dstAmountWithSign string
@@ -357,9 +357,14 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	}
 	var src, dst addressAmountList
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
+		amount := new(big.Int).SetBytes(transfer.Amount)
+		amountStr := "0"
+		if amount.Sign() != 0 {
+			amountStr = "-" + amount.String()
+		}
 		src = append(src, &addressAmount{
 			address: transfer.From,
-			amount:  "-" + new(big.Int).SetBytes(transfer.Amount).String(),
+			amount:  amountStr,
 		})
 		dst = append(dst, &addressAmount{
 			address: transfer.To,
