@@ -325,14 +325,16 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if amount == "" || actionType == "" {
 		return
 	}
-	var senderAmountWithSign, dstAmountWithSign string
-	if senderSign == "-" {
-		senderAmountWithSign = senderSign + amount
-		dstAmountWithSign = amount
-	} else {
-		senderAmountWithSign = amount
-		dstAmountWithSign = "-" + amount
+	senderAmountWithSign := amount
+	dstAmountWithSign := amount
+	if amount != "0" {
+		if senderSign == "-" {
+			senderAmountWithSign = senderSign + amount
+		} else {
+			dstAmountWithSign = "-" + amount
+		}
 	}
+
 	src := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
 	var dstAll []*addressAmount
 	if dst != "" {
