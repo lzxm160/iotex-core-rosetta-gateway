@@ -307,11 +307,12 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
+	fmt.Println("callerAddr", callerAddr.String())
 	ret, status, err := c.gasFeeAndStatus(callerAddr, act, h, receipt)
 	if err != nil {
 		return
 	}
-
+	fmt.Println("ret, status, err", ret, status, err)
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
 		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
