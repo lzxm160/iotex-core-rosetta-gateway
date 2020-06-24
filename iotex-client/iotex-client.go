@@ -307,7 +307,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	fmt.Println("callerAddr", callerAddr.String())
 	ret, status, err := c.gasFeeAndStatus(callerAddr, act, h, receipt)
 	if err != nil {
 		return
@@ -320,7 +319,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
-	fmt.Println(amount, senderSign, actionType, dst, err)
 	if err != nil {
 		return
 	}
@@ -341,9 +339,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
 	err = c.packTransaction(ret, src, dstAll, actionType, status)
-	if ret != nil {
-		fmt.Println("len(ret.Operations)", len(ret.Operations))
-	}
 	return
 }
 
@@ -410,7 +405,6 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string) (err error) {
 	sort.Sort(src)
 	sort.Sort(dst)
-	fmt.Println("packTransaction", len(ret.Operations))
 	var oper []*types.Operation
 	endIndex, oper, err := c.addOperation(src, actionType, status, 1, oper)
 	if err != nil {
@@ -421,7 +415,6 @@ func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addre
 		return
 	}
 
-	fmt.Println("packTransaction oper", len(oper))
 	ret.Operations = append(ret.Operations, oper...)
 	return
 }
