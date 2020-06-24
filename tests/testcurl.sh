@@ -98,3 +98,5 @@ curl -X POST --data '{
         "blockchain": "IoTeX",
         "network": "mainnet"},
     "block_identifier": {"index": 315038}}' http://127.0.0.1:8080/block
+#response
+#{"block":{"block_identifier":{"index":315038,"hash":"24314b35be07dd06e25ef05420150e237c3f4cde0c07fd664b489c56315bd9a9"},"parent_block_identifier":{"index":315037,"hash":"616a57922a85b6f00f4e2e8305e6072fbef0f1cf2de2512f58b498d76dae69c2"},"timestamp":1559059770000,"transactions":[{"transaction_identifier":{"hash":"00b9d37f15058562cbed83925b228edbaee303bfbd435b260143aca36ff9f16c"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1mrdqgmxs78z2z9uh7nxdy5znqq464uq3ytep99"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"claimFromRewardingFund","status":"success","account":{"address":"io1mrdqgmxs78z2z9uh7nxdy5znqq464uq3ytep99"},"amount":{"value":"0","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
