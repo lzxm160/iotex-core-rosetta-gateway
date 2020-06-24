@@ -92,7 +92,7 @@ curl -X POST --data '{
 #response
 #{"block":{"block_identifier":{"index":4066726,"hash":"de51a09829c13480da1e5bb11d3ee907cd79094d3c5acfa0e66daf88fcfac31a"},"parent_block_identifier":{"index":4066725,"hash":"c5c3ee4bfadfcea70dccca9056ccd48c1bfc122279059f32a08a78ad454a33cc"},"timestamp":1592960825000,"transactions":[{"transaction_identifier":{"hash":"c0477d9d735ce2b5cd7d9f8e48b1be113988dfa0147f4ffc4055dc4e38ff751c"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"stakeAddDeposit","status":"success","account":{"address":"io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"},"amount":{"value":"-1000000000000000000","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
 
-# claimFromRewardingFund,from mainnet
+# claimFromRewardingFund,from mainnet,amount 0
 curl -X POST --data '{
     "network_identifier": {
         "blockchain": "IoTeX",
@@ -100,3 +100,10 @@ curl -X POST --data '{
     "block_identifier": {"index": 315038}}' http://127.0.0.1:8080/block
 #response
 #{"block":{"block_identifier":{"index":315038,"hash":"24314b35be07dd06e25ef05420150e237c3f4cde0c07fd664b489c56315bd9a9"},"parent_block_identifier":{"index":315037,"hash":"616a57922a85b6f00f4e2e8305e6072fbef0f1cf2de2512f58b498d76dae69c2"},"timestamp":1559059770000,"transactions":[{"transaction_identifier":{"hash":"00b9d37f15058562cbed83925b228edbaee303bfbd435b260143aca36ff9f16c"},"operations":[{"operation_identifier":{"index":0},"type":"fee","status":"success","account":{"address":"io1mrdqgmxs78z2z9uh7nxdy5znqq464uq3ytep99"},"amount":{"value":"-10000000000000000","currency":{"symbol":"IOTX","decimals":18}}},{"operation_identifier":{"index":1},"type":"claimFromRewardingFund","status":"success","account":{"address":"io1mrdqgmxs78z2z9uh7nxdy5znqq464uq3ytep99"},"amount":{"value":"0","currency":{"symbol":"IOTX","decimals":18}}}]}]}}
+
+# claimFromRewardingFund,from mainnet,amount 0
+curl -X POST --data '{
+    "network_identifier": {
+        "blockchain": "IoTeX",
+        "network": "mainnet"},
+    "block_identifier": {"index": 281865}}' http://127.0.0.1:8080/block
