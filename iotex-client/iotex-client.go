@@ -312,7 +312,10 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	fmt.Println("len(oper)", len(ret.Operations))
+	if ret != nil {
+		fmt.Println("len(oper)", len(ret.Operations))
+	}
+
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
 		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
