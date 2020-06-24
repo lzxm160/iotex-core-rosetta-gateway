@@ -312,7 +312,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	fmt.Println("ret, status, err", ret, status, err)
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
 		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
@@ -377,11 +376,13 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 		err = errors.New("convert gas price error")
 		return
 	}
+	fmt.Println("gasConsumed, gasPrice, status", gasConsumed, gasPrice, status)
 	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
 	// if gasFee is 0
 	if gasFee.Sign() != 1 {
 		return
 	}
+
 	sender := addressAmountList{{address: callerAddr.String(), amount: "-" + gasFee.String()}}
 	var oper []*types.Operation
 	_, oper, err = c.addOperation(sender, ActionTypeFee, status, 0, oper)
