@@ -1,11 +1,11 @@
 network_identifier:
   blockchain: IoTeX
-  network: mainnet
+  network: testnet
 currency:
   symbol: IOTX
   decimals: 18
 server:
   port: 8080
-  endpoint: api.iotex.one:443
+  endpoint: api.testnet.iotex.one:443
   secureEndpoint: true
   rosettaVersion: 1.3.5
