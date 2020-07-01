@@ -202,8 +202,8 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		if err != nil {
 			// change to continue or return when systemlog is enabled in testnet
 			// TODO change it back
-			//return nil, err
-			continue
+			return nil, err
+			//continue
 		}
 		if decode != nil {
 			ret = append(ret, decode)
