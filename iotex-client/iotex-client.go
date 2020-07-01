@@ -356,11 +356,13 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 }
 
 func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, status, hash string, client iotexapi.APIServiceClient) (err error) {
+	fmt.Println("handleExecution")
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
 		ActionHash: hash,
 	}
 	resp, err := client.GetEvmTransfersByActionHash(ctx, request)
 	if err != nil {
+		fmt.Println("GetEvmTransfersByActionHash", err)
 		return
 	}
 	var src, dst addressAmountList
