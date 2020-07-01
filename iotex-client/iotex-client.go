@@ -325,8 +325,20 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
 		if act.GetCore().GetExecution().GetAmount() != "0" && status == StatusSuccess {
-			fmt.Println("//////////////////////execution here", act.GetCore().GetExecution().GetAmount())
 			err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
+			if err != nil {
+				// deal with pure transfer to contract address
+				src := []*addressAmount{{
+					address: callerAddr.String(),
+					amount:  "-" + act.GetCore().GetExecution().GetAmount(),
+				}}
+				dst := []*addressAmount{{
+					address: act.GetCore().GetExecution().GetContract(),
+					amount:  act.GetCore().GetExecution().GetAmount(),
+				}}
+				fmt.Println("/////////////////////before pure transfer to execution", err)
+				err = c.packTransaction(ret, src, dst, Execution, status)
+			}
 			return
 		}
 	}
@@ -495,6 +507,8 @@ func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst s
 	case act.GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
+	default:
+
 	}
 	return
 }
