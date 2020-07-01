@@ -364,6 +364,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		return
 	}
 	var src, dst addressAmountList
+	fmt.Println("resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
 		amount := new(big.Int).SetBytes(transfer.Amount)
 		amountStr := amount.String()
