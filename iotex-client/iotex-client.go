@@ -394,9 +394,9 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 	}
 	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
 	// if gasFee is 0
-	if gasFee.Sign() != 1 {
-		return
-	}
+	//if gasFee.Sign() != 1 {
+	//	return
+	//}
 	sender := addressAmountList{{address: callerAddr.String(), amount: "-" + gasFee.String()}}
 	var oper []*types.Operation
 	_, oper, err = c.addOperation(sender, ActionTypeFee, status, 0, oper)
