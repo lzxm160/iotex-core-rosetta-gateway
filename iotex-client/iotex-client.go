@@ -339,7 +339,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		}
 		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
 		return
-
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
