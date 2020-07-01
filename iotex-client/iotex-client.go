@@ -325,8 +325,10 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if act.GetCore().GetExecution() != nil {
 		// TODO test when testnet enable systemlog
 		fmt.Println("execution here")
-		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
-		return
+		if act.GetCore().GetExecution().GetAmount() != "0" {
+			err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
+			return
+		}
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
