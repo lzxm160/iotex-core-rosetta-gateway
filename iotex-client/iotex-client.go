@@ -322,25 +322,24 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 
-	if act.GetCore().GetExecution() != nil {
-		// TODO test when testnet enable systemlog
-		if act.GetCore().GetExecution().GetAmount() != "0" && status == StatusSuccess {
-			err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
-			if err != nil {
-				// deal with pure transfer to contract address
-				src := []*addressAmount{{
-					address: callerAddr.String(),
-					amount:  "-" + act.GetCore().GetExecution().GetAmount(),
-				}}
-				dst := []*addressAmount{{
-					address: act.GetCore().GetExecution().GetContract(),
-					amount:  act.GetCore().GetExecution().GetAmount(),
-				}}
-				fmt.Println("/////////////////////before pure transfer to execution", err)
-				err = c.packTransaction(ret, src, dst, Execution, status)
-			}
+	if act.GetCore().GetExecution() != nil && act.GetCore().GetExecution().GetAmount() != "0" && status == StatusSuccess {
+		if len(receipt.Logs) == 0 {
+			// deal with pure transfer to contract address
+			src := []*addressAmount{{
+				address: callerAddr.String(),
+				amount:  "-" + act.GetCore().GetExecution().GetAmount(),
+			}}
+			dst := []*addressAmount{{
+				address: act.GetCore().GetExecution().GetContract(),
+				amount:  act.GetCore().GetExecution().GetAmount(),
+			}}
+			fmt.Println("///////////////////// pure transfer to execution", err)
+			err = c.packTransaction(ret, src, dst, Execution, status)
 			return
 		}
+		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
+		return
+
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
