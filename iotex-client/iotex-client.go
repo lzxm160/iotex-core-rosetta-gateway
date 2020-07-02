@@ -380,7 +380,8 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		fmt.Println("GetEvmTransfersByActionHash1", err)
 		fmt.Println("GetEvmTransfersByActionHash2", errors.Cause(err))
 		fmt.Println("GetEvmTransfersByActionHash3", errorStatus.Error(codes.NotFound, err.Error()))
-		if errors.Cause(err) == errorStatus.Error(codes.NotFound, err.Error()) {
+		fmt.Println("GetEvmTransfersByActionHash4", errorStatus.Convert(err).Code())
+		if errorStatus.Convert(err).Code() == codes.NotFound {
 			// TODO test this case,cannot differentiate systemlog indexer is bad or just this log is not exist
 
 			err = c.packTransaction(ret, src, dst, Execution, status, 1)
