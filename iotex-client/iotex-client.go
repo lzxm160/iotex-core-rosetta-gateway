@@ -376,7 +376,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: hex.EncodeToString(h[:])}
 		responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
 		if err != nil {
-			return
+			return err
 		}
 		contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
 		fmt.Println("new contractAddr", contractAddr)
