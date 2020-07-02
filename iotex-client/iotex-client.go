@@ -10,7 +10,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"sort"
@@ -18,9 +17,12 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	errorStatus "google.golang.org/grpc/status"
 
 	"github.com/iotexproject/go-pkgs/crypto"
 	"github.com/iotexproject/go-pkgs/hash"
@@ -321,25 +323,24 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
+
 	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
-		//原来的 code
-		if act.GetCore().GetExecution().GetAmount() != "0" {
-			//加上处理那个 15 IOTX的情况
+		amount := act.GetCore().GetExecution().GetAmount()
+		if amount != "0" {
+			amount = "-" + amount
 		}
-	}
-	if act.GetCore().GetExecution() != nil && act.GetCore().GetExecution().GetAmount() != "0" && status == StatusSuccess {
-		if len(receipt.Logs) == 0 {
-			// deal with pure transfer to contract address
-			src := []*addressAmount{{
-				address: callerAddr.String(),
-				amount:  "-" + act.GetCore().GetExecution().GetAmount(),
-			}}
-			dst := []*addressAmount{{
-				address: act.GetCore().GetExecution().GetContract(),
-				amount:  act.GetCore().GetExecution().GetAmount(),
-			}}
-			fmt.Println("///////////////////// pure transfer to execution", err)
-			err = c.packTransaction(ret, src, dst, Execution, status)
+		// deal with pure transfer to contract address
+		src := []*addressAmount{{
+			address: callerAddr.String(),
+			amount:  amount,
+		}}
+		dst := []*addressAmount{{
+			address: act.GetCore().GetExecution().GetContract(),
+			amount:  act.GetCore().GetExecution().GetAmount(),
+		}}
+
+		err = c.packTransaction(ret, src, dst, Execution, status, 1)
+		if err != nil {
 			return
 		}
 		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
@@ -368,7 +369,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
-	err = c.packTransaction(ret, src, dstAll, actionType, status)
+	err = c.packTransaction(ret, src, dstAll, actionType, status, 1)
 	return
 }
 
@@ -380,6 +381,9 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	resp, err := client.GetEvmTransfersByActionHash(ctx, request)
 	if err != nil {
 		fmt.Println("GetEvmTransfersByActionHash", err)
+		if errors.Cause(err) == errorStatus.Error(codes.NotFound, err.Error()) {
+			return nil
+		}
 		return
 	}
 	var src, dst addressAmountList
@@ -399,7 +403,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return c.packTransaction(ret, src, dst, Execution, status)
+	return c.packTransaction(ret, src, dst, Execution, status, 2)
 }
 
 func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt) (ret *types.Transaction, status string, err error) {
@@ -436,11 +440,12 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 	return
 }
 
-func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string) (err error) {
+func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType,
+	status string, startIndex int64) (err error) {
 	sort.Sort(src)
 	sort.Sort(dst)
 	var oper []*types.Operation
-	endIndex, oper, err := c.addOperation(src, actionType, status, 1, oper)
+	endIndex, oper, err := c.addOperation(src, actionType, status, startIndex, oper)
 	if err != nil {
 		return
 	}
