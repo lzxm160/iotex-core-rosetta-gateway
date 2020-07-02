@@ -379,6 +379,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	if err != nil {
 		fmt.Println("GetEvmTransfersByActionHash", err)
 		if errors.Cause(err) == errorStatus.Error(codes.NotFound, err.Error()) {
+			// TODO test this case
 			err = c.packTransaction(ret, src, dst, Execution, status, 1)
 			return
 		}
