@@ -321,7 +321,12 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-
+	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
+		//原来的 code
+		if act.GetCore().GetExecution().GetAmount() != "0" {
+			//加上处理那个 15 IOTX的情况
+		}
+	}
 	if act.GetCore().GetExecution() != nil && act.GetCore().GetExecution().GetAmount() != "0" && status == StatusSuccess {
 		if len(receipt.Logs) == 0 {
 			// deal with pure transfer to contract address
