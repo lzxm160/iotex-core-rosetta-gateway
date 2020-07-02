@@ -373,13 +373,12 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	// get contract address generated of this action hash
 	contractAddr := act.GetCore().GetExecution().GetContract()
 	if contractAddr == "" {
-		requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: hex.EncodeToString(h[:])}
-		responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
+		// need to get contract address generated of this action hash
+		responseReceipt, err := client.GetReceiptByAction(ctx, &iotexapi.GetReceiptByActionRequest{ActionHash: hex.EncodeToString(h[:])})
 		if err != nil {
 			return err
 		}
 		contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
-		fmt.Println("new contractAddr", contractAddr)
 	}
 
 	dst := []*addressAmount{{
@@ -404,7 +403,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	}
 	fmt.Println("3911111111111111111")
 	src = []*addressAmount{}
-	fmt.Println("resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
+	dst = []*addressAmount{}
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
 		amount := new(big.Int).SetBytes(transfer.Amount)
 		amountStr := amount.String()
