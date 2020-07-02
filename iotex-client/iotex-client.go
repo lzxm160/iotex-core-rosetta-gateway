@@ -325,7 +325,8 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	}
 
 	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
-		return c.handleExecution(ctx, act, h, client, callerAddr, status)
+		err = c.handleExecution(ctx, ret, act, h, client, callerAddr, status)
+		return
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
@@ -354,7 +355,9 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	return
 }
 
-func (c *grpcIoTexClient) handleExecution(ctx context.Context, act *iotextypes.Action, h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address, status string) (ret *types.Transaction, err error) {
+func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action,
+	h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address,
+	status string) (err error) {
 	fmt.Println("not here?")
 	amount := act.GetCore().GetExecution().GetAmount()
 	if amount != "0" {
