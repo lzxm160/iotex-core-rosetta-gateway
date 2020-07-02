@@ -325,6 +325,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	}
 
 	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
+		fmt.Println("not here?")
 		amount := act.GetCore().GetExecution().GetAmount()
 		if amount != "0" {
 			amount = "-" + amount
