@@ -458,14 +458,9 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 	return
 }
 
-func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType,
-	status string, startIndex int64) (err error) {
-	if src.Len() != 0 {
-		sort.Sort(src)
-	}
-	if dst.Len() != 0 {
-		sort.Sort(dst)
-	}
+func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string, startIndex int64) (err error) {
+	sort.Sort(src)
+	sort.Sort(dst)
 	fmt.Println("error before .........", len(src), len(dst))
 	var oper []*types.Operation
 	endIndex, oper, err := c.addOperation(src, actionType, status, startIndex, oper)
