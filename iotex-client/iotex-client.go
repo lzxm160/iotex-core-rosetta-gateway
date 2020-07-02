@@ -404,7 +404,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return c.packTransaction(ret, src, dst, Execution, status, 2)
+	return c.packTransaction(ret, src, dst, Execution, status, 3)
 }
 
 func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt) (ret *types.Transaction, status string, err error) {
