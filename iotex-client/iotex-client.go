@@ -368,6 +368,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		address: callerAddr.String(),
 		amount:  amount,
 	}}
+	fmt.Println("hash.Hash256", hex.EncodeToString(h[:]))
 	fmt.Println("act.GetCore().GetExecution().GetContract()", act.GetCore().GetExecution().GetContract())
 	dst := []*addressAmount{{
 		address: act.GetCore().GetExecution().GetContract(),
