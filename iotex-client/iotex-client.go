@@ -325,27 +325,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	}
 
 	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
-		fmt.Println("not here?")
-		amount := act.GetCore().GetExecution().GetAmount()
-		if amount != "0" {
-			amount = "-" + amount
-		}
-		// deal with pure transfer to contract address
-		src := []*addressAmount{{
-			address: callerAddr.String(),
-			amount:  amount,
-		}}
-		dst := []*addressAmount{{
-			address: act.GetCore().GetExecution().GetContract(),
-			amount:  act.GetCore().GetExecution().GetAmount(),
-		}}
-
-		err = c.packTransaction(ret, src, dst, Execution, status, 1)
-		if err != nil {
-			return
-		}
-		err = c.handleExecution(ctx, ret, status, hex.EncodeToString(h[:]), client)
-		return
+		return c.handleExecution(ctx, act, h, client, callerAddr, status)
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
@@ -374,20 +354,35 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	return
 }
 
-func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, status, hash string, client iotexapi.APIServiceClient) (err error) {
-	fmt.Println("handleExecution hash", hash)
+func (c *grpcIoTexClient) handleExecution(ctx context.Context, act *iotextypes.Action, h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address, status string) (ret *types.Transaction, err error) {
+	fmt.Println("not here?")
+	amount := act.GetCore().GetExecution().GetAmount()
+	if amount != "0" {
+		amount = "-" + amount
+	}
+	// deal with pure transfer to contract address
+	src := []*addressAmount{{
+		address: callerAddr.String(),
+		amount:  amount,
+	}}
+	dst := []*addressAmount{{
+		address: act.GetCore().GetExecution().GetContract(),
+		amount:  act.GetCore().GetExecution().GetAmount(),
+	}}
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
-		ActionHash: hash,
+		ActionHash: hex.EncodeToString(h[:]),
 	}
 	resp, err := client.GetEvmTransfersByActionHash(ctx, request)
 	if err != nil {
 		fmt.Println("GetEvmTransfersByActionHash", err)
 		if errors.Cause(err) == errorStatus.Error(codes.NotFound, err.Error()) {
-			return nil
+			err = c.packTransaction(ret, src, dst, Execution, status, 1)
+			return
 		}
 		return
 	}
-	var src, dst addressAmountList
+
+	src = []*addressAmount{}
 	fmt.Println("resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
 		amount := new(big.Int).SetBytes(transfer.Amount)
@@ -404,7 +399,8 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return c.packTransaction(ret, src, dst, Execution, status, 3)
+	err = c.packTransaction(ret, src, dst, Execution, status, 2)
+	return
 }
 
 func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt) (ret *types.Transaction, status string, err error) {
