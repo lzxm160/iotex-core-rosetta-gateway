@@ -380,16 +380,15 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		fmt.Println("GetEvmTransfersByActionHash1", err)
 		fmt.Println("GetEvmTransfersByActionHash2", errors.Cause(err))
 		fmt.Println("GetEvmTransfersByActionHash3", errorStatus.Error(codes.NotFound, err.Error()))
-		fmt.Println("GetEvmTransfersByActionHash4", errorStatus.Convert(err).Code())
 		if errorStatus.Convert(err).Code() == codes.NotFound {
 			// TODO test this case,cannot differentiate systemlog indexer is bad or just this log is not exist
-
+			fmt.Println("GetEvmTransfersByActionHash4", errorStatus.Convert(err).Code())
 			err = c.packTransaction(ret, src, dst, Execution, status, 1)
 			return
 		}
 		return
 	}
-
+	fmt.Println("3911111111111111111")
 	src = []*addressAmount{}
 	fmt.Println("resp.GetActionEvmTransfers().GetEvmTransfers()", len(resp.GetActionEvmTransfers().GetEvmTransfers()))
 	for _, transfer := range resp.GetActionEvmTransfers().GetEvmTransfers() {
@@ -447,8 +446,13 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 
 func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType,
 	status string, startIndex int64) (err error) {
-	sort.Sort(src)
-	sort.Sort(dst)
+	if src.Len() != 0 {
+		sort.Sort(src)
+	}
+	if dst.Len() != 0 {
+		sort.Sort(dst)
+	}
+	fmt.Println("error before .........")
 	var oper []*types.Operation
 	endIndex, oper, err := c.addOperation(src, actionType, status, startIndex, oper)
 	if err != nil {
