@@ -370,8 +370,20 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	}}
 	fmt.Println("hash.Hash256", hex.EncodeToString(h[:]))
 	fmt.Println("act.GetCore().GetExecution().GetContract()", act.GetCore().GetExecution().GetContract())
+	// get contract address generated of this action hash
+	contractAddr := act.GetCore().GetExecution().GetContract()
+	if contractAddr == "" {
+		requestGetReceipt := &iotexapi.GetReceiptByActionRequest{ActionHash: hex.EncodeToString(h[:])}
+		responseReceipt, err := client.GetReceiptByAction(ctx, requestGetReceipt)
+		if err != nil {
+			return
+		}
+		contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
+		fmt.Println("new contractAddr", contractAddr)
+	}
+
 	dst := []*addressAmount{{
-		address: act.GetCore().GetExecution().GetContract(),
+		address: contractAddr,
 		amount:  act.GetCore().GetExecution().GetAmount(),
 	}}
 	request := &iotexapi.GetEvmTransfersByActionHashRequest{
