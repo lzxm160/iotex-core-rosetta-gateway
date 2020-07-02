@@ -402,7 +402,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	err = c.packTransaction(ret, src, dst, Execution, status, 2)
+	err = c.packTransaction(ret, src, dst, Execution, status, 1)
 	return
 }
 
