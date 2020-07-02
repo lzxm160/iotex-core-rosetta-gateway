@@ -468,6 +468,7 @@ func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addre
 
 func (c *grpcIoTexClient) addOperation(l addressAmountList, actionType, status string, startIndex int64, oper []*types.Operation) (int64, []*types.Operation, error) {
 	for _, s := range l {
+		fmt.Println("s.address", s.address)
 		oper = append(oper, &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index:        startIndex,
