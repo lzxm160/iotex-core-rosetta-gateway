@@ -452,7 +452,7 @@ func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addre
 	if dst.Len() != 0 {
 		sort.Sort(dst)
 	}
-	fmt.Println("error before .........")
+	fmt.Println("error before .........", len(src), len(dst))
 	var oper []*types.Operation
 	endIndex, oper, err := c.addOperation(src, actionType, status, startIndex, oper)
 	if err != nil {
