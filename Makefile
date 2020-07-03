@@ -61,8 +61,8 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 tests/server: tests/iotex-core.tar.gz
 	@echo "$(MAGENTA)*** Building iotex-core...$(OFF)\n"
 	@tar -xf $< -C tests
-    @cd tests/iotex-core-$(IOTEX_SERVER_RELEASE) && make build
-    @cp tests/iotex-core-$(IOTEX_SERVER_RELEASE)/bin/server tests
+	@cd tests/iotex-core-$(IOTEX_SERVER_RELEASE) && make build
+	@cp tests/iotex-core-$(IOTEX_SERVER_RELEASE)/bin/server tests
 
 .PHONY: test
 test: build tests/rosetta-cli tests/server
