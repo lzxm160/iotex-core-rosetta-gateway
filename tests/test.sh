@@ -18,7 +18,7 @@ ${GW} &
 
 sleep 3
 
-printf "${GRN}### Inject some actions using ioctl...${OFF}\n"
+printf "${GRN}### Inject some actions...${OFF}\n"
 cd inject
 go test
 
