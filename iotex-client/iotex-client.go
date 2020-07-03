@@ -173,7 +173,6 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		Count:        1,
 		WithReceipts: true,
 	})
-	fmt.Println("GetTransactions", getRawBlocksRes, err)
 	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
 		return
 	}
@@ -273,7 +272,6 @@ func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTe
 		},
 	}
 	resp, err := client.GetBlockMetas(ctx, request)
-	fmt.Println("client.GetBlockMetas", resp, err)
 	if err != nil {
 		return nil, err
 	}
