@@ -7,3 +7,4 @@ chain:
     dbPath: poll.db
 system:
   systemLogDBPath: systemlog.db
+  httpStatsPort: 8081
