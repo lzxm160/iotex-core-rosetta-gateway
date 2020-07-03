@@ -91,7 +91,7 @@ func (s *networkAPIService) NetworkOptions(
 	}
 
 	version, err := s.client.GetVersion(ctx)
-	fmt.Println("//////////////////////////////////", version, err)
+	fmt.Println("//////////////////////////////////", version.GetServerMeta().GetPackageVersion())
 	if err != nil {
 		return nil, ErrUnableToGetNodeStatus
 	}
