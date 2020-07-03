@@ -32,9 +32,8 @@ const (
 	privateKey = "414efa99dfac6f4095d6954713fb0085268d400d6a05a8ae8a69b5b1c10b4bed"
 	to         = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt    = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
-	//endpoint         = "127.0.0.1:14014"
-	endpoint         = "api.testnet.iotex.one:80"
-	IoTeXDID_address = "io14gqv7s4dkfhdgssq4l7sedjv68kv70hl4x5j0u"
+	endpoint   = "127.0.0.1:14014"
+	//endpoint         = "api.testnet.iotex.one:80"
 )
 
 var (
