@@ -67,8 +67,8 @@ tests/server: tests/iotex-core.tar.gz
 .PHONY: test
 test: build tests/rosetta-cli tests/server
 	@echo "Running tests...\n"
-	#@chmod +x ./tests/test.sh
-	#@cd tests&&./test.sh&&chmod -x ./test.sh
+	@chmod +x ./tests/test.sh
+	@cd tests&&./test.sh&&chmod -x ./test.sh
 
 .PHONY: clean
 clean:
