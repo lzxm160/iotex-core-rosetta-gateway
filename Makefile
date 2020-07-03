@@ -63,7 +63,7 @@ tests/server: tests/iotex-core.tar.gz
 	@tar -xf $< -C tests
 	@cd tests/iotex-core-$(IOTEX_SERVER_RELEASE) && make build
 	@cp tests/iotex-core-$(IOTEX_SERVER_RELEASE)/bin/server tests
-
+	@cp tests/iotex-core-$(IOTEX_SERVER_RELEASE)/bin/ioctl tests
 .PHONY: test
 test: build tests/rosetta-cli tests/server
 	@echo "Running tests...\n"
