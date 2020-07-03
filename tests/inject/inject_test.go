@@ -29,9 +29,9 @@ import (
 
 const (
 	sender     = "io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"
+	privateKey = "414efa99dfac6f4095d6954713fb0085268d400d6a05a8ae8a69b5b1c10b4bed"
 	to         = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt    = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
-	privateKey = "414efa99dfac6f4095d6954713fb0085268d400d6a05a8ae8a69b5b1c10b4bed"
 	//endpoint         = "127.0.0.1:14014"
 	endpoint         = "api.testnet.iotex.one:80"
 	IoTeXDID_address = "io14gqv7s4dkfhdgssq4l7sedjv68kv70hl4x5j0u"
@@ -54,8 +54,7 @@ func TestInjectTransfer(t *testing.T) {
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	to, err := address.FromString(to)
 	require.NoError(err)
-	hash, err := c.Transfer(to, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.
-		Background())
+	hash, err := c.Transfer(to, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
 	require.NoError(err)
 	require.NotNil(hash)
 	checkHash(hex.EncodeToString(hash[:]), t)
@@ -81,9 +80,7 @@ func TestMultisend(t *testing.T) {
 	require.NoError(err)
 	r1ethAddress := common.HexToAddress(hex.EncodeToString(r1.Bytes()))
 	r2ethAddress := common.HexToAddress(hex.EncodeToString(r2.Bytes()))
-	hash, err := c.Contract(contractAddr, abi).Execute("multiSend", []common.Address{r1ethAddress, r2ethAddress}, []*big.Int{big.NewInt(1), big.NewInt(2)}, "").SetGasPrice(gasPrice).
-		SetGasLimit(gasLimit).
-		Call(context.Background())
+	hash, err := c.Contract(contractAddr, abi).Execute("multiSend", []common.Address{r1ethAddress, r2ethAddress}, []*big.Int{big.NewInt(1), big.NewInt(2)}, "").SetGasPrice(gasPrice).SetGasLimit(gasLimit).SetAmount(big.NewInt(3)).Call(context.Background())
 	require.NoError(err)
 	require.NotNil(hash)
 	checkHash(hex.EncodeToString(hash[:]), t)

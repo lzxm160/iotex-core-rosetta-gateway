@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/coinbase/rosetta-sdk-go v0.1.5
-	github.com/ethereum/go-ethereum v1.9.15
+	github.com/ethereum/go-ethereum v1.9.15 // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/iotexproject/go-pkgs v0.1.1
 	github.com/iotexproject/iotex-address v0.2.1
