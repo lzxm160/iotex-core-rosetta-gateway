@@ -49,7 +49,7 @@ tests/rosetta-cli.tar.gz:
 	@$(DOWNLOAD) $@ https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
 
 tests/iotex-core.tar.gz:
-	@echo "$(MAGENTA)*** Downloading and build iotex-core release $(IOTEX_SERVER_RELEASE)...$(OFF)\n"
+	@echo "$(MAGENTA)*** Downloading iotex-core release $(IOTEX_SERVER_RELEASE)...$(OFF)\n"
 	@$(DOWNLOAD) $@ https://github.com/iotexproject/iotex-core/archive/v$(IOTEX_SERVER_RELEASE).tar.gz
 
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
