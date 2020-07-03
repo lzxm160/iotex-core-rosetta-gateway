@@ -11,9 +11,21 @@ trap "cleanup" EXIT
 # ANSI escape codes to brighten up the output.
 GRN=$'\e[32;1m'
 OFF=$'\e[0m'
+
+GW="./server -config-path=config_testnet.yaml -genesis-path=genesis_testnet.yaml -plugin=gateway"
+printf "${GRN}### Starting the iotex server...${OFF}\n"
+${GW} &
+
+sleep 3
+
+printf "${GRN}### Inject some actions using ioctl...${OFF}\n"
+./ioctl
+
+
 GW="./iotex-core-rosetta-gateway"
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 cd ..
+export ConfigPath=tests/gateway_config.yaml
 go build -o ./iotex-core-rosetta-gateway .
 ${GW} &
 
