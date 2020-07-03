@@ -8,7 +8,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -91,15 +90,17 @@ func (s *networkAPIService) NetworkOptions(
 	}
 
 	version, err := s.client.GetVersion(ctx)
-	fmt.Println("//////////////////////////////////", version.GetServerMeta().GetPackageVersion())
 	if err != nil {
 		return nil, ErrUnableToGetNodeStatus
 	}
-
+	packageVersion := version.GetServerMeta().GetPackageVersion()
+	if packageVersion == "" {
+		packageVersion = "v1.0.0"
+	}
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion: s.client.GetConfig().Server.RosettaVersion,
-			NodeVersion:    version.GetServerMeta().GetPackageVersion(),
+			NodeVersion:    packageVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses: []*types.OperationStatus{
