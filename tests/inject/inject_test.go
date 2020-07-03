@@ -42,24 +42,18 @@ var (
 )
 
 func TestInjectTransfer(t *testing.T) {
-	fmt.Println("inject transfer")
-	require := require.New(t)
-	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
-	require.NoError(err)
-	defer conn.Close()
-
-	acc, err := account.HexStringToAccount(privateKey)
-	require.NoError(err)
-	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
-	to, err := address.FromString(to)
-	require.NoError(err)
-	hash, err := c.Transfer(to, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
-	require.NoError(err)
-	require.NotNil(hash)
-	checkHash(hex.EncodeToString(hash[:]), t)
+	for i := 0; i < 42; i++ {
+		injectTransfer(t)
+	}
 }
 
 func TestMultisend(t *testing.T) {
+	for i := 0; i < 42; i++ {
+		injectMultisend(t)
+	}
+}
+
+func injectMultisend(t *testing.T) {
 	require := require.New(t)
 	contract := deployContract(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
@@ -85,6 +79,24 @@ func TestMultisend(t *testing.T) {
 	checkHash(hex.EncodeToString(hash[:]), t)
 }
 
+func injectTransfer(t *testing.T) {
+	fmt.Println("inject transfer")
+	require := require.New(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	to, err := address.FromString(to)
+	require.NoError(err)
+	hash, err := c.Transfer(to, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
+	require.NoError(err)
+	require.NotNil(hash)
+	checkHash(hex.EncodeToString(hash[:]), t)
+}
+
 func deployContract(t *testing.T) string {
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
@@ -102,7 +114,7 @@ func deployContract(t *testing.T) string {
 	require.NoError(err)
 	require.NotNil(hash)
 	fmt.Println("hash", hex.EncodeToString(hash[:]))
-	time.Sleep(15 * time.Second)
+	time.Sleep(5 * time.Second)
 	receiptResponse, err := c.GetReceipt(hash).Call(context.Background())
 	require.NoError(err)
 	contractAddress := receiptResponse.GetReceiptInfo().GetReceipt().GetContractAddress()
@@ -114,7 +126,7 @@ func deployContract(t *testing.T) string {
 func checkHash(h string, t *testing.T) {
 	fmt.Println("check hash:", h)
 	require := require.New(t)
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
