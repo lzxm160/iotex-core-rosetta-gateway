@@ -103,7 +103,7 @@ func deployContract(t *testing.T) string {
 	require.NoError(err)
 	require.NotNil(hash)
 	fmt.Println("hash", hex.EncodeToString(hash[:]))
-	time.Sleep(10 * time.Second)
+	time.Sleep(15 * time.Second)
 	receiptResponse, err := c.GetReceipt(hash).Call(context.Background())
 	require.NoError(err)
 	contractAddress := receiptResponse.GetReceiptInfo().GetReceipt().GetContractAddress()
