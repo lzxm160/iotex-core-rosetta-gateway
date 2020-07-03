@@ -8,6 +8,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -49,9 +50,11 @@ func (s *blockAPIService) Block(
 		return nil, ErrUnableToGetBlk
 	}
 	txns, err := s.client.GetTransactions(ctx, height)
+	fmt.Println("s.client.GetTransactions", txns, err)
 	if err != nil {
 		return nil, ErrUnableToGetBlk
 	}
+
 	tblk := &types.Block{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: blk.Height,
