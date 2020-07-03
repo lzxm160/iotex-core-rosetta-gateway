@@ -303,7 +303,13 @@ func (c *grpcIoTexClient) reconnect() (err error) {
 	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
 		return
 	}
-	c.grpcConn, err = grpc.Dial(c.endpoint, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	opts := []grpc.DialOption{}
+	if c.cfg.Server.SecureEndpoint {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	c.grpcConn, err = grpc.Dial(c.endpoint, opts...)
 	return err
 }
 
