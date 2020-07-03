@@ -73,7 +73,7 @@ test: build tests/rosetta-cli tests/server
 .PHONY: clean
 clean:
 	@echo "Cleaning..."
-	@rm -rf ./tests/rosetta*
+	@rm -rf ./tests/rosetta* ./tests/iotex-core*
 	@rm -rf ./$(BUILD_TARGET_SERVER)
 	@rm -rf $(COV_REPORT) $(COV_HTML) $(LINT_LOG)
 	@find . -name $(COV_OUT) -delete
