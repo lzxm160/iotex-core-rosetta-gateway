@@ -19,7 +19,7 @@ ${GW} &
 sleep 3
 
 printf "${GRN}### Inject some actions using ioctl...${OFF}\n"
-go test tests
+go test inject
 
 GW="./iotex-core-rosetta-gateway"
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
