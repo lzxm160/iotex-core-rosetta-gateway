@@ -87,7 +87,7 @@ func checkHash(h string, t *testing.T) {
 	fmt.Println("check hash:", h)
 	require := require.New(t)
 	time.Sleep(20 * time.Second)
-	conn, err := iotex.NewDefaultGRPCConn(endpoint)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
 	ha, err := hash.HexStringToHash256(h)
