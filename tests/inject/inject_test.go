@@ -42,13 +42,15 @@ var (
 )
 
 func TestInjectTransfer(t *testing.T) {
-	for i := 0; i < 42; i++ {
+	for i := 0; i < 21; i++ {
+		fmt.Println("inject transfer", i)
 		injectTransfer(t)
 	}
 }
 
 func TestMultisend(t *testing.T) {
-	for i := 0; i < 42; i++ {
+	for i := 0; i < 21; i++ {
+		fmt.Println("inject multisend contract", i)
 		injectMultisend(t)
 	}
 }
@@ -80,7 +82,6 @@ func injectMultisend(t *testing.T) {
 }
 
 func injectTransfer(t *testing.T) {
-	fmt.Println("inject transfer")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
