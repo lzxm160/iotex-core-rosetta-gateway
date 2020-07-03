@@ -173,6 +173,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		Count:        1,
 		WithReceipts: true,
 	})
+	fmt.Println("GetTransactions", getRawBlocksRes, err)
 	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
 		return
 	}
