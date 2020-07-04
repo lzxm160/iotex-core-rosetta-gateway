@@ -23,7 +23,7 @@ printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_R
 	${DOWNLOAD} $rosetta-cli-tar
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
-	${DOWNLOAD} ${iotex-core-tar}
+	${DOWNLOAD} $iotex-core-tar
 
 #build
 printf "${GRN}### Building rosetta-cli...$(OFF)\n"
