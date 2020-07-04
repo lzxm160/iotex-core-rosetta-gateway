@@ -30,7 +30,8 @@ fmt:
 .PHONY: test
 test:
 	@docker build -f ./docker/test/Dockerfile . -t iotexproject/iotex-core-rosetta-test
-	@docker run --rm iotexproject/iotex-core-rosetta-test
+	@docker run -it --rm iotexproject/iotex-core-rosetta-test bash
+	@chmod +x tests/test.sh&&./tests/test.sh
 
 .PHONY: clean
 clean:
