@@ -160,7 +160,7 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 		return
 	}
 	acc = &Account{
-		Nonce:   resp.AccountMeta.Nonce,
+		Nonce:   resp.AccountMeta.PendingNonce,
 		Balance: resp.AccountMeta.Balance,
 	}
 	blkIndentifier=&types.BlockIdentifier{
