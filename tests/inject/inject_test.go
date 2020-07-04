@@ -15,24 +15,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/iotexproject/go-pkgs/crypto"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/iotexproject/go-pkgs/hash"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	"github.com/iotexproject/go-pkgs/hash"
 	"github.com/iotexproject/iotex-address/address"
 	"github.com/iotexproject/iotex-antenna-go/v2/account"
 	"github.com/iotexproject/iotex-antenna-go/v2/iotex"
+	"github.com/iotexproject/iotex-core/action"
 	"github.com/iotexproject/iotex-proto/golang/iotexapi"
 )
 
 const (
-	sender     = "io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"
-	privateKey = "414efa99dfac6f4095d6954713fb0085268d400d6a05a8ae8a69b5b1c10b4bed"
-	to         = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
-	receipt    = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
-	endpoint   = "127.0.0.1:14014"
+	sender      = "io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"
+	privateKey  = "414efa99dfac6f4095d6954713fb0085268d400d6a05a8ae8a69b5b1c10b4bed"
+	sender2     = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
+	privateKey2 = "cfa6ef757dee2e50351620dca002d32b9c090cfda55fb81f37f1d26b273743f1"
+	to          = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
+	receipt     = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
+	endpoint    = "127.0.0.1:14014"
 	//endpoint         = "api.testnet.iotex.one:80"
 )
 
@@ -53,6 +58,33 @@ func TestMultisend(t *testing.T) {
 		fmt.Println("inject multisend contract", i)
 		injectMultisend(t)
 	}
+}
+
+func TestCandidateRegister(t *testing.T) {
+	require := require.New(t)
+	cr, err := action.NewCandidateRegister(1, sender2, sender2, sender2, sender2, "1000000000",
+		7, true, nil, gasLimit, gasPrice)
+	require.NoError(err)
+	sk, err := crypto.HexStringToPrivateKey(privateKey2)
+	bd := &action.EnvelopeBuilder{}
+	elp := bd.SetNonce(1).
+		SetGasPrice(gasPrice).
+		SetGasLimit(gasLimit).
+		SetAction(cr).Build()
+	selp, err := action.Sign(elp, sk)
+	require.NoError(err)
+	request := &iotexapi.SendActionRequest{Action: selp.Proto()}
+
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	resp, err := c.API().SendAction(context.Background(), request)
+	require.NoError(err)
+	require.NotEmpty(resp.GetActionHash())
+	checkHash(resp.GetActionHash(), t)
 }
 
 func injectMultisend(t *testing.T) {

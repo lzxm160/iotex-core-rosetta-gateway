@@ -37,13 +37,12 @@ cd tests
 ./rosetta-cli create:configuration config.json
 
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
-./rosetta-cli check --lookup-balance-by-block=false --end 100 --bootstrap-balances ./bootstrap_balances.json
---block-concurrency 8
+./rosetta-cli check --lookup-balance-by-block=false --end 100 --bootstrap-balances ./bootstrap_balances.json --block-concurrency 8
 ./rosetta-cli view:account '{"address":"io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"}'
 ./rosetta-cli view:block 10
 rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
-rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./ioctl
+#rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./ioctl
 rm -rf ./config.json
 printf "${GRN}### Tests finished.${OFF}\n"
