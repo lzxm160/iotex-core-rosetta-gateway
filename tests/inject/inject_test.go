@@ -71,7 +71,7 @@ func TestCandidateRegister(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender2})
 	require.NoError(err)
-	fmt.Println("nonce:",getacc.AccountMeta.PendingNonce)
+	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2,
 		"12001000000000000000000000",
 		7, true, nil, gasLimit, gasPrice)
