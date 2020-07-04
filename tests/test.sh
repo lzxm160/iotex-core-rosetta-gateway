@@ -29,13 +29,13 @@ printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF
 printf "${GRN}### Building rosetta-cli...${OFF}\n"
 	tar -xf tests/rosetta-cli-${ROSETTA_CLI_RELEASE}.tar.gz -C tests
 	cd tests/rosetta-cli-${ROSETTA_CLI_RELEASE} && go build
-	cd ..
+	cd ../..
 	cp tests/rosetta-cli-${ROSETTA_CLI_RELEASE}/rosetta-cli tests
 
 printf "${GRN}### Building iotex-core...${OFF}\n"
 	tar -xf tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz -C tests
 	cd tests/iotex-core-${IOTEX_SERVER_RELEASE} && make build
-	cd ..
+	cd ../..
 	cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server tests
 
 GW="./server -config-path=config_testnet.yaml -genesis-path=genesis_testnet.yaml -plugin=gateway"
