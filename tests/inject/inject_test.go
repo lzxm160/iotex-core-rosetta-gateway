@@ -62,7 +62,7 @@ func TestMultisend(t *testing.T) {
 
 func TestCandidateRegister(t *testing.T) {
 	require := require.New(t)
-	cr, err := action.NewCandidateRegister(1, sender2, sender2, sender2, sender2, "1000000000",
+	cr, err := action.NewCandidateRegister(1, sender2, sender2, sender2, sender2, "1200100000000000000000000",
 		7, true, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
