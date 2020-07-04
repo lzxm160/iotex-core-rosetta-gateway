@@ -223,6 +223,13 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			ret = append(ret, decode)
 		}
 	}
+	// check the transaction only have fee and fee is 0
+	for i, t := range ret {
+		if len(t.Operations) == 2 && t.Operations[0].Type == ActionTypeFee && t.Operations[1].Type == ActionTypeFee && t.Operations[0].Amount.Value == "0" && t.
+			Operations[1].Amount.Value == "0" {
+			ret = append(ret[:i], ret[i+1:]...)
+		}
+	}
 	return
 }
 
