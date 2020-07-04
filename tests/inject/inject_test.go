@@ -62,7 +62,18 @@ func TestMultisend(t *testing.T) {
 
 func TestCandidateRegister(t *testing.T) {
 	require := require.New(t)
-	cr, err := action.NewCandidateRegister(1, sender2, sender2, sender2, sender2, "12001000000000000000000000",
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender2})
+	require.NoError(err)
+
+	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, sender2, sender2, sender2, sender2,
+		"12001000000000000000000000",
 		7, true, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
@@ -75,12 +86,6 @@ func TestCandidateRegister(t *testing.T) {
 	require.NoError(err)
 	request := &iotexapi.SendActionRequest{Action: selp.Proto()}
 
-	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
-	require.NoError(err)
-	defer conn.Close()
-	acc, err := account.HexStringToAccount(privateKey)
-	require.NoError(err)
-	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	resp, err := c.API().SendAction(context.Background(), request)
 	require.NoError(err)
 	require.NotEmpty(resp.GetActionHash())
