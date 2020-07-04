@@ -61,6 +61,7 @@ func TestMultisend(t *testing.T) {
 }
 
 func TestCandidateRegister(t *testing.T) {
+	fmt.Println("inject candidate register")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
@@ -93,6 +94,7 @@ func TestCandidateRegister(t *testing.T) {
 }
 
 func TestStakeCreate(t *testing.T) {
+	fmt.Println("inject stake create")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
@@ -125,6 +127,7 @@ func TestStakeCreate(t *testing.T) {
 func TestStakeWithdraw(t *testing.T) {}
 
 func TestStakeAddDeposit(t *testing.T) {
+	fmt.Println("inject stake add deposit")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
