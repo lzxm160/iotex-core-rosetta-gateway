@@ -172,6 +172,22 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 
 func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	actionHashToEvmTransfer := make(map[string][]*iotextypes.EvmTransfer)
+	// get systemlog first
+	systemlog, err := client.GetEvmTransfersByBlockHeight(context.Background(),
+		&iotexapi.GetEvmTransfersByBlockHeightRequest{
+			BlockHeight: uint64(height),
+		})
+	if err != nil && errorStatus.Convert(err).Code() != codes.NotFound {
+		return
+	}
+	if systemlog != nil {
+		for _, l := range systemlog.GetBlockEvmTransfers().GetActionEvmTransfers() {
+			// put those transfers to map
+			actionHashToEvmTransfer[hex.EncodeToString(l.GetActionHash())] = l.GetEvmTransfers()
+		}
+	}
+
 	getRawBlocksRes, err := client.GetRawBlocks(context.Background(), &iotexapi.GetRawBlocksRequest{
 		StartHeight:  uint64(height),
 		Count:        1,
