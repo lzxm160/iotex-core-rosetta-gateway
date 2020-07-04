@@ -21,10 +21,10 @@ iotex_core_tar='${DOWNLOAD} https://github.com/iotexproject/iotex-core/archive/$
 
 #download
 printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_RELEASE}
-	$rosetta_cli_tar
+	${rosetta_cli_tar}
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
-	$iotex_core_tar
+	${iotex_core_tar}
 
 #build
 printf "${GRN}### Building rosetta-cli...$(OFF)\n"
