@@ -34,6 +34,7 @@ import (
 )
 
 const (
+	protocolID             = "rewarding"
 	Transfer               = "transfer"
 	Execution              = "execution"
 	DepositToRewardingFund = "depositToRewardingFund"
@@ -46,6 +47,16 @@ const (
 	StatusFail             = "fail"
 	ActionTypeFee          = "fee"
 )
+
+var (
+	RewardingAddress string
+)
+
+func init() {
+	h := hash.Hash160b([]byte(protocolID))
+	addr, _ := address.FromBytes(h[:])
+	RewardingAddress = addr.String()
+}
 
 type (
 	// IoTexClient is the IoTex blockchain client interface.
@@ -358,7 +369,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
-	err = c.packTransaction(ret, src, dstAll, actionType, status, 1)
+	err = c.packTransaction(ret, src, dstAll, actionType, status, 2)
 	return
 }
 
@@ -409,7 +420,7 @@ func (c *grpcIoTexClient) handleExecutionSystemlog(ret *types.Transaction, trans
 			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
 		})
 	}
-	return c.packTransaction(ret, src, dst, Execution, status, 1)
+	return c.packTransaction(ret, src, dst, Execution, status, 2)
 }
 
 func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address,
@@ -425,7 +436,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	if err != nil {
 		if errorStatus.Convert(err).Code() == codes.NotFound {
 			// TODO test this case,cannot differentiate systemlog indexer is bad or just this log is not exist
-			err = c.packTransaction(ret, src, dst, Execution, status, 1)
+			err = c.packTransaction(ret, src, dst, Execution, status, 2)
 			return
 		}
 		return
@@ -453,8 +464,13 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 	}
 
 	sender := addressAmountList{{address: callerAddr.String(), amount: amount}}
+	receiptor := addressAmountList{{address: RewardingAddress, amount: gasFee.String()}}
 	var oper []*types.Operation
 	_, oper, err = c.addOperation(sender, ActionTypeFee, status, 0, oper)
+	if err != nil {
+		return
+	}
+	_, oper, err = c.addOperation(receiptor, ActionTypeFee, status, 1, oper)
 	if err != nil {
 		return
 	}
