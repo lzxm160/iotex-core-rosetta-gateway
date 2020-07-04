@@ -167,6 +167,7 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 }
 
 func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
+	fmt.Println("GetTransactions")
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	getRawBlocksRes, err := client.GetRawBlocks(context.Background(), &iotexapi.GetRawBlocksRequest{
 		StartHeight:  uint64(height),
@@ -176,6 +177,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
 		return
 	}
+	fmt.Println("GetTransactions 180")
 	ret = make([]*types.Transaction, 0)
 	actionMap := make(map[hash.Hash256]*iotextypes.Action)
 	receiptMap := make(map[hash.Hash256]*iotextypes.Receipt)
