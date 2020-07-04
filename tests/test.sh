@@ -15,14 +15,14 @@ BUILD_TARGET_SERVER=iotex-core-rosetta-gateway
 ROSETTA_CLI_RELEASE=0.2.4
 IOTEX_SERVER=iotex-core
 IOTEX_SERVER_RELEASE=master
-DOWNLOAD=$(wget --quiet --show-progress --progress=bar:force:noscroll -O)
+DOWNLOAD="wget --quiet --show-progress --progress=bar:force:noscroll -O"
 
 #download
 printf "${GRN}### Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...${OFF}\n"
-	$(DOWNLOAD) https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
+	${DOWNLOAD} https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
 
 printf "${GRN}### Downloading iotex-core release $(IOTEX_SERVER_RELEASE)...${OFF}\n"
-	@$(DOWNLOAD) https://github.com/iotexproject/iotex-core/archive/$(IOTEX_SERVER_RELEASE).tar.gz
+	${DOWNLOAD} https://github.com/iotexproject/iotex-core/archive/$(IOTEX_SERVER_RELEASE).tar.gz
 
 printf "${GRN}### Building rosetta-cli...$(OFF)\n"
 	@tar -xf tests/rosetta-cli-$(ROSETTA_CLI_RELEASE).tar.gz -C tests
