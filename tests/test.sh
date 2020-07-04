@@ -26,12 +26,12 @@ printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF
 	wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
 
 #build
-printf "${GRN}### Building rosetta-cli...$(OFF)\n"
+printf "${GRN}### Building rosetta-cli...${OFF}\n"
 	tar -xf tests/rosetta-cli-${ROSETTA_CLI_RELEASE}.tar.gz -C tests
 	cd tests/rosetta-cli-${ROSETTA_CLI_RELEASE} && go build
 	cp tests/rosetta-cli-${ROSETTA_CLI_RELEASE}/rosetta-cli tests
 
-printf "${GRN}### Building iotex-core...$(OFF)\n"
+printf "${GRN}### Building iotex-core...${OFF}\n"
 	tar -xf tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz -C tests
 	cd tests/iotex-core-${IOTEX_SERVER_RELEASE} && make build
 	cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server tests
