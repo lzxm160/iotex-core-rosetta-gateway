@@ -15,15 +15,18 @@ BUILD_TARGET_SERVER=iotex-core-rosetta-gateway
 ROSETTA_CLI_RELEASE=0.2.4
 IOTEX_SERVER=iotex-core
 IOTEX_SERVER_RELEASE=master
-rosetta_cli_tar='wget --quiet --show-progress --progress=bar:force:noscroll -O https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz'
-iotex_core_tar='wget --quiet --show-progress --progress=bar:force:noscroll -O https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz'
+download='wget --quiet --show-progress --progress=bar:force:noscroll -O'
+rosetta_cli_tar='${download} rosetta-cli-${ROSETTA_CLI_RELEASE}.tar
+.gz https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz'
+iotex_core_tar='${download} iotex-core-${IOTEX_SERVER_RELEASE}.tar
+.gz https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz'
 
 #download
 printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_RELEASE}
-	wget --quiet --show-progress --progress=bar:force:noscroll -O https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz
+	${rosetta_cli_tar}
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
-	wget --quiet --show-progress --progress=bar:force:noscroll -O https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
+	${iotex_core_tar}
 
 #build
 printf "${GRN}### Building rosetta-cli...$(OFF)\n"
