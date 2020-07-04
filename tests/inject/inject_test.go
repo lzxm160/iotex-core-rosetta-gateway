@@ -124,7 +124,35 @@ func TestStakeCreate(t *testing.T) {
 
 func TestStakeWithdraw(t *testing.T) {}
 
-func TestStakeAddDeposit(t *testing.T) {}
+func TestStakeAddDeposit(t *testing.T) {
+	require := require.New(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
+	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 1, "1200100000000000000000000", nil, gasLimit, gasPrice)
+	require.NoError(err)
+	sk, err := crypto.HexStringToPrivateKey(privateKey)
+	bd := &action.EnvelopeBuilder{}
+	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
+		SetGasPrice(gasPrice).
+		SetGasLimit(gasLimit).
+		SetAction(cr).Build()
+	selp, err := action.Sign(elp, sk)
+	require.NoError(err)
+	request := &iotexapi.SendActionRequest{Action: selp.Proto()}
+
+	resp, err := c.API().SendAction(context.Background(), request)
+	require.NoError(err)
+	require.NotEmpty(resp.GetActionHash())
+	checkHash(resp.GetActionHash(), t)
+}
 
 func injectMultisend(t *testing.T) {
 	require := require.New(t)
