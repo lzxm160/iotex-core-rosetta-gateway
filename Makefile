@@ -17,7 +17,7 @@ GOGET=$(GOCMD) get
 BUILD_TARGET_SERVER=iotex-core-rosetta-gateway
 ROSETTA_CLI_RELEASE=0.2.4
 IOTEX_SERVER=iotex-core
-IOTEX_SERVER_RELEASE=1.0.0
+IOTEX_SERVER_RELEASE=master
 MAGENTA = ""
 OFF = ""
 
@@ -50,7 +50,7 @@ tests/rosetta-cli.tar.gz:
 
 tests/iotex-core.tar.gz:
 	@echo "$(MAGENTA)*** Downloading iotex-core release $(IOTEX_SERVER_RELEASE)...$(OFF)\n"
-	@$(DOWNLOAD) $@ https://github.com/iotexproject/iotex-core/archive/v$(IOTEX_SERVER_RELEASE).tar.gz
+	@$(DOWNLOAD) $@ https://github.com/iotexproject/iotex-core/archive/$(IOTEX_SERVER_RELEASE).tar.gz
 
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@echo "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"

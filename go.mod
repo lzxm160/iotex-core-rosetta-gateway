@@ -8,7 +8,7 @@ require (
 	github.com/gogo/protobuf v1.2.1
 	github.com/iotexproject/go-pkgs v0.1.1
 	github.com/iotexproject/iotex-address v0.2.1
-	github.com/iotexproject/iotex-proto v0.3.0
+	github.com/iotexproject/iotex-proto v0.3.1-0.20200702022020-f4eb6a148265
 	github.com/pkg/errors v0.8.1
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/config v1.3.1
