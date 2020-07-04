@@ -16,24 +16,25 @@ ROSETTA_CLI_RELEASE=0.2.4
 IOTEX_SERVER=iotex-core
 IOTEX_SERVER_RELEASE=master
 DOWNLOAD="wget --quiet --show-progress --progress=bar:force:noscroll -O"
-
+rosetta-cli-tar="https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz"
+iotex-core-tar="https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz"
 #download
 printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_RELEASE}
-	${DOWNLOAD} https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz
+	${DOWNLOAD} ${rosetta-cli-tar}
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
-	${DOWNLOAD} https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
+	${DOWNLOAD} ${iotex-core-tar}
 
 #build
 printf "${GRN}### Building rosetta-cli...$(OFF)\n"
-	@tar -xf tests/rosetta-cli-${ROSETTA_CLI_RELEASE}.tar.gz -C tests
-	@cd tests/rosetta-cli-${ROSETTA_CLI_RELEASE} && go build
-	@cp tests/rosetta-cli-${ROSETTA_CLI_RELEASE}/rosetta-cli tests
+	tar -xf tests/rosetta-cli-${ROSETTA_CLI_RELEASE}.tar.gz -C tests
+	cd tests/rosetta-cli-${ROSETTA_CLI_RELEASE} && go build
+	cp tests/rosetta-cli-${ROSETTA_CLI_RELEASE}/rosetta-cli tests
 
 printf "${GRN}### Building iotex-core...$(OFF)\n"
-	@tar -xf tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz -C tests
-	@cd tests/iotex-core-${IOTEX_SERVER_RELEASE} && make build
-	@cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server tests
+	tar -xf tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz -C tests
+	cd tests/iotex-core-${IOTEX_SERVER_RELEASE} && make build
+	cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server tests
 
 GW="./server -config-path=config_testnet.yaml -genesis-path=genesis_testnet.yaml -plugin=gateway"
 printf "${GRN}### Starting the iotex server...${OFF}\n"
