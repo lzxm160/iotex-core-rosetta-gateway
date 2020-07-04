@@ -274,6 +274,7 @@ func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTe
 		},
 	}
 	resp, err := client.GetBlockMetas(ctx, request)
+	fmt.Println("client.GetBlockMetas", resp, err)
 	if err != nil {
 		return nil, err
 	}
