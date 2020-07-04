@@ -43,6 +43,6 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
-rm -rf ./rosetta* ./iotex-core* ./*.db ./server
+rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./*.tar.gz
 rm -rf ./config.json
 printf "${GRN}### Tests finished.${OFF}\n"
