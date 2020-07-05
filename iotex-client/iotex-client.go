@@ -215,6 +215,7 @@ func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner st
 		Arguments:  nil,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	val, ok := big.NewInt(0).SetString(string(out.Data), 10)
