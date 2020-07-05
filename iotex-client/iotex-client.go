@@ -260,12 +260,14 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	for _, receipt := range blk.GetReceipts() {
 		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
 	}
+	fmt.Println("len(actionMap)", len(actionMap))
 	for _, h := range hashSlice {
 		act := actionMap[h]
 		if act.GetCore().GetGrantReward() != nil {
 			// gas fee and amount both 0
 			continue
 		}
+		fmt.Println("270")
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", hex.EncodeToString(h[:])))
