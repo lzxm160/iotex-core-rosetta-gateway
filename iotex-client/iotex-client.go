@@ -399,7 +399,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 
-	amount, senderSign, actionType, src, dst, err := assertAction(act, callerAddr.String())
+	amount, senderSign, actionType, dst, err := assertAction(act)
 	if err != nil {
 		return
 	}
@@ -417,7 +417,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		}
 	}
 
-	srcAll := []*addressAmount{{address: src, amount: senderAmountWithSign}}
+	srcAll := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
 	var dstAll []*addressAmount
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
@@ -585,45 +585,39 @@ func (c *grpcIoTexClient) addOperation(l addressAmountList, actionType, status s
 	return startIndex, oper, nil
 }
 
-func assertAction(act *iotextypes.Action, sender string) (amount, senderSign, actionType, src, dst string, err error) {
+func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst string, err error) {
 	amount = "0"
 	senderSign = "-"
 	switch {
 	case act.GetCore().GetTransfer() != nil:
 		actionType = Transfer
 		amount = act.GetCore().GetTransfer().GetAmount()
-		src = sender
 		dst = act.GetCore().GetTransfer().GetRecipient()
 	case act.GetCore().GetDepositToRewardingFund() != nil:
 		actionType = DepositToRewardingFund
 		amount = act.GetCore().GetDepositToRewardingFund().GetAmount()
-		src = sender
 		dst = RewardingAddress
 	case act.GetCore().GetClaimFromRewardingFund() != nil:
 		actionType = ClaimFromRewardingFund
 		amount = act.GetCore().GetClaimFromRewardingFund().GetAmount()
 		senderSign = "+"
-		src = RewardingAddress
-		dst = sender
+		dst = RewardingAddress
 	case act.GetCore().GetStakeAddDeposit() != nil:
 		actionType = StakeAddDeposit
 		amount = act.GetCore().GetStakeAddDeposit().GetAmount()
-		src = sender
 		dst = StakingAddress
 	case act.GetCore().GetStakeCreate() != nil:
 		actionType = StakeCreate
 		amount = act.GetCore().GetStakeCreate().GetStakedAmount()
-		src = sender
 		dst = StakingAddress
 	case act.GetCore().GetStakeWithdraw() != nil:
 		// TODO need to add amount when it's available on iotex-core
 		actionType = StakeWithdraw
-		src = StakingAddress
-		dst = sender
+		senderSign = "+"
+		dst = StakingAddress
 	case act.GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
-		src = sender
 		dst = StakingAddress
 	}
 	return
