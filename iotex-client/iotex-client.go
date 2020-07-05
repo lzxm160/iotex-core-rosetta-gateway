@@ -34,28 +34,34 @@ import (
 )
 
 const (
-	protocolID             = "rewarding"
-	Transfer               = "transfer"
-	Execution              = "execution"
-	DepositToRewardingFund = "depositToRewardingFund"
-	ClaimFromRewardingFund = "claimFromRewardingFund"
-	StakeCreate            = "stakeCreate"
-	StakeWithdraw          = "stakeWithdraw"
-	StakeAddDeposit        = "stakeAddDeposit"
-	CandidateRegister      = "candidateRegister"
-	StatusSuccess          = "success"
-	StatusFail             = "fail"
-	ActionTypeFee          = "fee"
+	rewardingProtocolID      = "rewarding"
+	stakingProtocolID        = "staking"
+	availableBalanceMethodID = "AvailableBalance"
+	Transfer                 = "transfer"
+	Execution                = "execution"
+	DepositToRewardingFund   = "depositToRewardingFund"
+	ClaimFromRewardingFund   = "claimFromRewardingFund"
+	StakeCreate              = "stakeCreate"
+	StakeWithdraw            = "stakeWithdraw"
+	StakeAddDeposit          = "stakeAddDeposit"
+	CandidateRegister        = "candidateRegister"
+	StatusSuccess            = "success"
+	StatusFail               = "fail"
+	ActionTypeFee            = "fee"
 )
 
 var (
 	RewardingAddress string
+	StakingAddress   string
 )
 
 func init() {
-	h := hash.Hash160b([]byte(protocolID))
+	h := hash.Hash160b([]byte(rewardingProtocolID))
 	addr, _ := address.FromBytes(h[:])
 	RewardingAddress = addr.String()
+	h = hash.Hash160b([]byte(stakingProtocolID))
+	addr, _ = address.FromBytes(h[:])
+	StakingAddress = addr.String()
 }
 
 type (
@@ -147,6 +153,10 @@ func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, erro
 	if err != nil {
 		return nil, err
 	}
+	return c.getLatestBlock(ctx)
+}
+
+func (c *grpcIoTexClient) getLatestBlock(ctx context.Context) (*IoTexBlock, error) {
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	res, err := client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
 	if err != nil {
@@ -160,6 +170,9 @@ func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, err
 }
 
 func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
+	if owner == RewardingAddress || owner == StakingAddress {
+		return c.getAccount(ctx, height, owner)
+	}
 	err = c.reconnect()
 	if err != nil {
 		return
@@ -177,6 +190,45 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 	blkIndentifier = &types.BlockIdentifier{
 		Index: int64(resp.BlockIdentifier.Height),
 		Hash:  resp.BlockIdentifier.Hash,
+	}
+	return
+}
+
+func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
+	// call readState
+	err = c.reconnect()
+	if err != nil {
+		return
+	}
+	var protocolID []byte
+	if owner == RewardingAddress {
+		protocolID = []byte(rewardingProtocolID)
+	}
+	if owner == StakingAddress {
+		protocolID = []byte(stakingProtocolID)
+	}
+	client := iotexapi.NewAPIServiceClient(c.grpcConn)
+	out, err := client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
+		ProtocolID: protocolID,
+		MethodName: []byte(availableBalanceMethodID),
+		Arguments:  nil,
+	})
+	val, ok := big.NewInt(0).SetString(string(out.Data), 10)
+	if !ok {
+		err = errors.New("balance convert error")
+		return
+	}
+	acc = &Account{
+		Nonce:   0,
+		Balance: val.String(),
+	}
+	blk, err := c.getLatestBlock(ctx)
+	if err != nil {
+		return
+	}
+	blkIndentifier = &types.BlockIdentifier{
+		Index: blk.Height,
+		Hash:  blk.Hash,
 	}
 	return
 }
@@ -270,10 +322,6 @@ func (c *grpcIoTexClient) GetConfig() *config.Config {
 }
 
 func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
-	err = c.reconnect()
-	if err != nil {
-		return
-	}
 	var parentHeight uint64
 	if height <= 1 {
 		parentHeight = 1
@@ -354,7 +402,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 
-	amount, senderSign, actionType, dst, err := assertAction(act)
+	amount, senderSign, actionType, src, dst, err := assertAction(act, callerAddr.String())
 	if err != nil {
 		return
 	}
@@ -371,12 +419,12 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		}
 	}
 
-	src := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
+	srcAll := []*addressAmount{{address: src, amount: senderAmountWithSign}}
 	var dstAll []*addressAmount
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
-	err = c.packTransaction(ret, src, dstAll, actionType, status, 2)
+	err = c.packTransaction(ret, srcAll, dstAll, actionType, status, 2)
 	return
 }
 
@@ -539,33 +587,46 @@ func (c *grpcIoTexClient) addOperation(l addressAmountList, actionType, status s
 	return startIndex, oper, nil
 }
 
-func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst string, err error) {
+func assertAction(act *iotextypes.Action, sender string) (amount, senderSign, actionType, src, dst string, err error) {
 	amount = "0"
 	senderSign = "-"
 	switch {
 	case act.GetCore().GetTransfer() != nil:
 		actionType = Transfer
 		amount = act.GetCore().GetTransfer().GetAmount()
+		src = sender
 		dst = act.GetCore().GetTransfer().GetRecipient()
 	case act.GetCore().GetDepositToRewardingFund() != nil:
 		actionType = DepositToRewardingFund
 		amount = act.GetCore().GetDepositToRewardingFund().GetAmount()
+		src = sender
+		dst = RewardingAddress
 	case act.GetCore().GetClaimFromRewardingFund() != nil:
 		actionType = ClaimFromRewardingFund
 		amount = act.GetCore().GetClaimFromRewardingFund().GetAmount()
 		senderSign = "+"
+		src = RewardingAddress
+		dst = sender
 	case act.GetCore().GetStakeAddDeposit() != nil:
 		actionType = StakeAddDeposit
 		amount = act.GetCore().GetStakeAddDeposit().GetAmount()
+		src = sender
+		dst = StakingAddress
 	case act.GetCore().GetStakeCreate() != nil:
 		actionType = StakeCreate
 		amount = act.GetCore().GetStakeCreate().GetStakedAmount()
+		src = sender
+		dst = StakingAddress
 	case act.GetCore().GetStakeWithdraw() != nil:
 		// TODO need to add amount when it's available on iotex-core
 		actionType = StakeWithdraw
+		src = StakingAddress
+		dst = sender
 	case act.GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
+		src = sender
+		dst = StakingAddress
 	}
 	return
 }
