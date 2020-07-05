@@ -195,6 +195,7 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 }
 
 func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
+	fmt.Println("should be here", owner)
 	// call readState
 	err = c.reconnect()
 	if err != nil {
