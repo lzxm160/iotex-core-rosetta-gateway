@@ -175,8 +175,8 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 		return
 	}
 
-	if owner == RewardingAddress || owner == StakingAddress {
-		return c.getAccount(ctx, height, owner)
+	if owner == RewardingAddress {
+		return c.getRewardingAccount(ctx, height)
 	}
 
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
@@ -196,17 +196,12 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 	return
 }
 
-func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
+func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64) (acc *Account,
+	blkIndentifier *types.BlockIdentifier, err error) {
 	// call readState
-	var protocolID []byte
-	if owner == RewardingAddress {
-		protocolID = []byte(rewardingProtocolID)
-	} else {
-		protocolID = []byte(stakingProtocolID)
-	}
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	out, err := client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
-		ProtocolID: protocolID,
+		ProtocolID: []byte(rewardingProtocolID),
 		MethodName: []byte(availableBalanceMethodID),
 		Arguments:  nil,
 	})
