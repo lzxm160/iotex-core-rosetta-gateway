@@ -214,6 +214,9 @@ func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner st
 		MethodName: []byte(availableBalanceMethodID),
 		Arguments:  nil,
 	})
+	if err != nil {
+		return
+	}
 	val, ok := big.NewInt(0).SetString(string(out.Data), 10)
 	if !ok {
 		err = errors.New("balance convert error")
