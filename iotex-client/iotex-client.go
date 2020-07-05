@@ -260,14 +260,12 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	for _, receipt := range blk.GetReceipts() {
 		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
 	}
-	fmt.Println("len(actionMap)", len(actionMap))
 	for _, h := range hashSlice {
 		act := actionMap[h]
 		if act.GetCore().GetGrantReward() != nil {
 			// gas fee and amount both 0
 			continue
 		}
-		fmt.Println("270")
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", hex.EncodeToString(h[:])))
@@ -281,13 +279,6 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			ret = append(ret, decode)
 		}
 	}
-	// check the transaction only have fee and fee is 0
-	//for i, t := range ret {
-	//	if len(t.Operations) == 2 && t.Operations[0].Type == ActionTypeFee && t.Operations[1].Type == ActionTypeFee && t.Operations[0].Amount.Value == "0" && t.
-	//		Operations[1].Amount.Value == "0" {
-	//		ret = append(ret[:i], ret[i+1:]...)
-	//	}
-	//}
 	return
 }
 
@@ -634,12 +625,6 @@ func assertAction(act *iotextypes.Action, sender string) (amount, senderSign, ac
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
 		src = sender
 		dst = StakingAddress
-	case act.GetCore().GetGrantReward() != nil:
-		actionType = "GrantReward"
-	case act.GetCore().GetPutPollResult() != nil:
-		actionType = "PutPollResult"
-	default:
-		actionType = "default"
 	}
 	return
 }
