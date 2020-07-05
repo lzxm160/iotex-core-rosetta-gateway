@@ -208,6 +208,8 @@ func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner st
 	if owner == StakingAddress {
 		protocolID = []byte(stakingProtocolID)
 	}
+	fmt.Println(string(protocolID))
+	fmt.Println(string([]byte(availableBalanceMethodID)))
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	out, err := client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
 		ProtocolID: protocolID,
