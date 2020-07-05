@@ -170,13 +170,15 @@ func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, err
 }
 
 func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
-	if owner == RewardingAddress || owner == StakingAddress {
-		return c.getAccount(ctx, height, owner)
-	}
 	err = c.reconnect()
 	if err != nil {
 		return
 	}
+
+	if owner == RewardingAddress || owner == StakingAddress {
+		return c.getAccount(ctx, height, owner)
+	}
+
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	request := &iotexapi.GetAccountRequest{Address: owner}
 	resp, err := client.GetAccount(ctx, request)
@@ -195,29 +197,20 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 }
 
 func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
-	fmt.Println("should be here", owner)
 	// call readState
-	err = c.reconnect()
-	if err != nil {
-		return
-	}
 	var protocolID []byte
 	if owner == RewardingAddress {
 		protocolID = []byte(rewardingProtocolID)
-	} else if owner == StakingAddress {
+	} else {
 		protocolID = []byte(stakingProtocolID)
 	}
-	fmt.Println(string(protocolID))
-	fmt.Println(string([]byte(availableBalanceMethodID)))
 	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	out, err := client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
 		ProtocolID: protocolID,
 		MethodName: []byte(availableBalanceMethodID),
 		Arguments:  nil,
 	})
-
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	val, ok := big.NewInt(0).SetString(string(out.Data), 10)
@@ -410,7 +403,6 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
-	fmt.Println("amount type", amount, actionType)
 	if amount == "" || actionType == "" {
 		return
 	}
@@ -424,12 +416,12 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		}
 	}
 
-	srcAll := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
+	src := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
 	var dstAll []*addressAmount
 	if dst != "" {
 		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
 	}
-	err = c.packTransaction(ret, srcAll, dstAll, actionType, status, 2)
+	err = c.packTransaction(ret, src, dstAll, actionType, status, 2)
 	return
 }
 
