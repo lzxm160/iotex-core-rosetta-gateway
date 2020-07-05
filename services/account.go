@@ -8,6 +8,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -36,8 +37,9 @@ func (s *accountAPIService) AccountBalance(
 		return nil, terr
 	}
 	// TODO fix this when we have archive mode
-	acc,blkIdentifier, err := s.client.GetAccount(ctx, 0, request.AccountIdentifier.Address)
+	acc, blkIdentifier, err := s.client.GetAccount(ctx, 0, request.AccountIdentifier.Address)
 	if err != nil {
+		fmt.Println(err)
 		return nil, ErrUnableToGetAccount
 	}
 
@@ -45,7 +47,7 @@ func (s *accountAPIService) AccountBalance(
 	md[NonceKey] = acc.Nonce
 
 	resp := &types.AccountBalanceResponse{
-		BlockIdentifier:blkIdentifier,
+		BlockIdentifier: blkIdentifier,
 		Balances: []*types.Amount{
 			&types.Amount{
 				Value: acc.Balance,

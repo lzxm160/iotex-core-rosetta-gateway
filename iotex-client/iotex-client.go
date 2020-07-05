@@ -214,6 +214,7 @@ func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner st
 		MethodName: []byte(availableBalanceMethodID),
 		Arguments:  nil,
 	})
+
 	if err != nil {
 		fmt.Println(err)
 		return
