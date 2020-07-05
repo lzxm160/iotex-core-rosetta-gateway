@@ -628,6 +628,12 @@ func assertAction(act *iotextypes.Action, sender string) (amount, senderSign, ac
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
 		src = sender
 		dst = StakingAddress
+	case act.GetCore().GetGrantReward() != nil:
+		actionType = "GrantReward"
+	case act.GetCore().GetPutPollResult() != nil:
+		actionType = "PutPollResult"
+	default:
+		actionType = "default"
 	}
 	return
 }
