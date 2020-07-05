@@ -406,6 +406,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if err != nil {
 		return
 	}
+	fmt.Println("amount type", amount, actionType)
 	if amount == "" || actionType == "" {
 		return
 	}
