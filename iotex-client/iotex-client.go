@@ -204,8 +204,7 @@ func (c *grpcIoTexClient) getAccount(ctx context.Context, height int64, owner st
 	var protocolID []byte
 	if owner == RewardingAddress {
 		protocolID = []byte(rewardingProtocolID)
-	}
-	if owner == StakingAddress {
+	} else if owner == StakingAddress {
 		protocolID = []byte(stakingProtocolID)
 	}
 	fmt.Println(string(protocolID))
