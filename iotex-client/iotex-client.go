@@ -380,12 +380,13 @@ func (c *grpcIoTexClient) getRawBlock(ctx context.Context, height int64) (action
 	hashSlice = make([]hash.Hash256, 0)
 	blk := getRawBlocksRes.GetBlocks()[0]
 	for _, act := range blk.GetBlock().GetBody().GetActions() {
-		proto, err := proto.Marshal(act)
+		var pro []byte
+		pro, err = proto.Marshal(act)
 		if err != nil {
 			return
 		}
-		actionMap[hash.Hash256b(proto)] = act
-		hashSlice = append(hashSlice, hash.Hash256b(proto))
+		actionMap[hash.Hash256b(pro)] = act
+		hashSlice = append(hashSlice, hash.Hash256b(pro))
 	}
 	for _, receipt := range blk.GetReceipts() {
 		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
