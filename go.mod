@@ -6,9 +6,10 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.1.5
 	github.com/ethereum/go-ethereum v1.9.15 // indirect
 	github.com/gogo/protobuf v1.2.1
+	github.com/golang/protobuf v1.3.3
 	github.com/iotexproject/go-pkgs v0.1.1
 	github.com/iotexproject/iotex-address v0.2.1
-	github.com/iotexproject/iotex-proto v0.3.1-0.20200702022020-f4eb6a148265
+	github.com/iotexproject/iotex-proto v0.3.1-0.20200704071137-a5ee3688bff1
 	github.com/pkg/errors v0.8.1
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/config v1.3.1

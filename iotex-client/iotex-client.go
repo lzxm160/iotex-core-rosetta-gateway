@@ -16,13 +16,11 @@ import (
 	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
-	errorStatus "google.golang.org/grpc/status"
 
 	"github.com/iotexproject/go-pkgs/crypto"
 	"github.com/iotexproject/go-pkgs/hash"
@@ -48,6 +46,9 @@ const (
 	StatusSuccess            = "success"
 	StatusFail               = "fail"
 	ActionTypeFee            = "fee"
+	// NonceKey is the name of the key in the Metadata map inside a
+	// ConstructionMetadataResponse that specifies the next valid nonce.
+	NonceKey = "nonce"
 )
 
 var (
@@ -72,17 +73,17 @@ type (
 		GetChainID(ctx context.Context) (string, error)
 
 		// GetBlock returns the IoTex block at given height.
-		GetBlock(ctx context.Context, height int64) (*IoTexBlock, error)
+		GetBlock(ctx context.Context, height int64) (*types.Block, error)
 
 		// GetLatestBlock returns latest IoTex block.
-		GetLatestBlock(ctx context.Context) (*IoTexBlock, error)
+		GetLatestBlock(ctx context.Context) (*types.Block, error)
 
 		// GetGenesisBlock returns the IoTex genesis block.
-		GetGenesisBlock(ctx context.Context) (*IoTexBlock, error)
+		GetGenesisBlock(ctx context.Context) (*types.Block, error)
 
 		// GetAccount returns the IoTex staking account for given owner address
 		// at given height.
-		GetAccount(ctx context.Context, height int64, owner string) (*Account, *types.BlockIdentifier, error)
+		GetAccount(ctx context.Context, height int64, owner string) (*types.AccountBalanceResponse, error)
 
 		// SubmitTx submits the given encoded transaction to the node.
 		SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error)
@@ -100,15 +101,6 @@ type (
 		GetConfig() *config.Config
 	}
 
-	// IoTexBlock is the IoTex blockchain's block.
-	IoTexBlock struct {
-		Height       int64  // Block height.
-		Hash         string // Block hash.
-		Timestamp    int64  // UNIX time, converted to milliseconds.
-		ParentHeight int64  // Height of parent block.
-		ParentHash   string // Hash of parent block.
-	}
-
 	Account struct {
 		Nonce   uint64
 		Balance string
@@ -118,25 +110,19 @@ type (
 	grpcIoTexClient struct {
 		sync.RWMutex
 
-		endpoint string
 		grpcConn *grpc.ClientConn
+		client   iotexapi.APIServiceClient
 		cfg      *config.Config
 	}
 )
 
 // NewIoTexClient returns an implementation of IoTexClient
 func NewIoTexClient(cfg *config.Config) (cli IoTexClient, err error) {
-	opts := []grpc.DialOption{}
-	if cfg.Server.SecureEndpoint {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-	} else {
-		opts = append(opts, grpc.WithInsecure())
-	}
-	grpc, err := grpc.Dial(cfg.Server.Endpoint, opts...)
-	if err != nil {
+	gcli := &grpcIoTexClient{cfg: cfg}
+	if err = gcli.connect(); err != nil {
 		return
 	}
-	cli = &grpcIoTexClient{grpcConn: grpc, cfg: cfg}
+	cli = gcli
 	return
 }
 
@@ -144,34 +130,37 @@ func (c *grpcIoTexClient) GetChainID(ctx context.Context) (string, error) {
 	return c.cfg.NetworkIdentifier.Network, nil
 }
 
-func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
+func (c *grpcIoTexClient) GetBlock(ctx context.Context, height int64) (ret *types.Block, err error) {
+	if err = c.connect(); err != nil {
+		return
+	}
 	return c.getBlock(ctx, height)
 }
 
-func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*IoTexBlock, error) {
-	err := c.reconnect()
-	if err != nil {
+func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*types.Block, error) {
+	if err := c.connect(); err != nil {
 		return nil, err
 	}
 	return c.getLatestBlock(ctx)
 }
 
-func (c *grpcIoTexClient) getLatestBlock(ctx context.Context) (*IoTexBlock, error) {
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	res, err := client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
+func (c *grpcIoTexClient) getLatestBlock(ctx context.Context) (*types.Block, error) {
+	res, err := c.client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
 	if err != nil {
 		return nil, err
 	}
 	return c.getBlock(ctx, int64(res.ChainMeta.Height))
 }
 
-func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*IoTexBlock, error) {
+func (c *grpcIoTexClient) GetGenesisBlock(ctx context.Context) (*types.Block, error) {
+	if err := c.connect(); err != nil {
+		return nil, err
+	}
 	return c.getBlock(ctx, 1)
 }
 
-func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (acc *Account, blkIndentifier *types.BlockIdentifier, err error) {
-	err = c.reconnect()
-	if err != nil {
+func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner string) (ret *types.AccountBalanceResponse, err error) {
+	if err = c.connect(); err != nil {
 		return
 	}
 
@@ -179,28 +168,33 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 		return c.getRewardingAccount(ctx, height)
 	}
 
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	request := &iotexapi.GetAccountRequest{Address: owner}
-	resp, err := client.GetAccount(ctx, request)
+	resp, err := c.client.GetAccount(ctx, request)
 	if err != nil {
 		return
 	}
-	acc = &Account{
-		Nonce:   resp.AccountMeta.PendingNonce,
-		Balance: resp.AccountMeta.Balance,
-	}
-	blkIndentifier = &types.BlockIdentifier{
-		Index: int64(resp.BlockIdentifier.Height),
-		Hash:  resp.BlockIdentifier.Hash,
+	acc := resp.GetAccountMeta()
+	blk := resp.GetBlockIdentifier()
+	ret = &types.AccountBalanceResponse{
+		BlockIdentifier: &types.BlockIdentifier{
+			Index: int64(blk.GetHeight()),
+			Hash:  blk.GetHash(),
+		},
+		Balances: []*types.Amount{{
+			Value: acc.GetBalance(),
+			Currency: &types.Currency{
+				Symbol:   c.cfg.Currency.Symbol,
+				Decimals: c.cfg.Currency.Decimals,
+				Metadata: nil,
+			}}},
+		Metadata: &map[string]interface{}{NonceKey: acc.GetPendingNonce()},
 	}
 	return
 }
 
-func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64) (acc *Account,
-	blkIndentifier *types.BlockIdentifier, err error) {
+func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64) (ret *types.AccountBalanceResponse, err error) {
 	// call readState
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	out, err := client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
+	out, err := c.client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
 		ProtocolID: []byte(rewardingProtocolID),
 		MethodName: []byte(availableBalanceMethodID),
 		Arguments:  nil,
@@ -213,48 +207,43 @@ func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64)
 		err = errors.New("balance convert error")
 		return
 	}
-	acc = &Account{
-		Nonce:   0,
-		Balance: val.String(),
-	}
 	blk, err := c.getLatestBlock(ctx)
 	if err != nil {
 		return
 	}
-	blkIndentifier = &types.BlockIdentifier{
-		Index: blk.Height,
-		Hash:  blk.Hash,
+
+	ret = &types.AccountBalanceResponse{
+		BlockIdentifier: blk.BlockIdentifier,
+		Balances: []*types.Amount{{
+			Value: val.String(),
+			Currency: &types.Currency{
+				Symbol:   c.cfg.Currency.Symbol,
+				Decimals: c.cfg.Currency.Decimals,
+				Metadata: nil,
+			},
+		},
+		},
+		Metadata: &map[string]interface{}{NonceKey: 0},
 	}
 	return
 }
 
 func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	getRawBlocksRes, err := client.GetRawBlocks(context.Background(), &iotexapi.GetRawBlocksRequest{
-		StartHeight:  uint64(height),
-		Count:        1,
-		WithReceipts: true,
-	})
-	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
+	if err = c.connect(); err != nil {
 		return
 	}
+	actionMap, receiptMap, hashSlice, err := c.getRawBlock(ctx, height)
+	if err != nil {
+		return
+	}
+
+	// get systemlog by height and store to map
+	hashToSystemLog, err := c.getSystemLog(ctx, height)
+	if err != nil {
+		return
+	}
+
 	ret = make([]*types.Transaction, 0)
-	actionMap := make(map[hash.Hash256]*iotextypes.Action)
-	receiptMap := make(map[hash.Hash256]*iotextypes.Receipt)
-	// hashSlice for fixed sequence,b/c map is unordered
-	hashSlice := make([]hash.Hash256, 0)
-	blk := getRawBlocksRes.GetBlocks()[0]
-	for _, act := range blk.GetBlock().GetBody().GetActions() {
-		proto, err := proto.Marshal(act)
-		if err != nil {
-			return nil, err
-		}
-		actionMap[hash.Hash256b(proto)] = act
-		hashSlice = append(hashSlice, hash.Hash256b(proto))
-	}
-	for _, receipt := range blk.GetReceipts() {
-		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
-	}
 	for _, h := range hashSlice {
 		act := actionMap[h]
 		if act.GetCore().GetGrantReward() != nil {
@@ -266,7 +255,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", hex.EncodeToString(h[:])))
 			return
 		}
-		decode, err := c.decodeAction(ctx, act, h, r, client)
+		decode, err := c.decodeAction(ctx, act, hex.EncodeToString(h[:]), r, hashToSystemLog)
 		if err != nil {
 			return nil, err
 		}
@@ -278,12 +267,10 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 }
 
 func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (txid string, err error) {
-	err = c.reconnect()
-	if err != nil {
+	if err = c.connect(); err != nil {
 		return
 	}
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	ret, err := client.SendAction(ctx, &iotexapi.SendActionRequest{Action: tx})
+	ret, err := c.client.SendAction(ctx, &iotexapi.SendActionRequest{Action: tx})
 	if err != nil {
 		return
 	}
@@ -292,35 +279,50 @@ func (c *grpcIoTexClient) SubmitTx(ctx context.Context, tx *iotextypes.Action) (
 }
 
 func (c *grpcIoTexClient) GetStatus(ctx context.Context) (*iotexapi.GetChainMetaResponse, error) {
-	err := c.reconnect()
+	err := c.connect()
 	if err != nil {
 		return nil, err
 	}
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	return client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
+	return c.client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
 }
 
 func (c *grpcIoTexClient) GetVersion(ctx context.Context) (*iotexapi.GetServerMetaResponse, error) {
-	err := c.reconnect()
+	err := c.connect()
 	if err != nil {
 		return nil, err
 	}
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
-	return client.GetServerMeta(ctx, &iotexapi.GetServerMetaRequest{})
+	return c.client.GetServerMeta(ctx, &iotexapi.GetServerMetaRequest{})
 }
 
 func (c *grpcIoTexClient) GetConfig() *config.Config {
 	return c.cfg
 }
 
-func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTexBlock, err error) {
+func (c *grpcIoTexClient) connect() (err error) {
+	c.Lock()
+	defer c.Unlock()
+	// Check if the existing connection is good.
+	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
+		return
+	}
+	opts := []grpc.DialOption{}
+	if c.cfg.Server.SecureEndpoint {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	c.grpcConn, err = grpc.Dial(c.cfg.Server.Endpoint, opts...)
+	c.client = iotexapi.NewAPIServiceClient(c.grpcConn)
+	return err
+}
+
+func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *types.Block, err error) {
 	var parentHeight uint64
 	if height <= 1 {
 		parentHeight = 1
 	} else {
 		parentHeight = uint64(height) - 1
 	}
-	client := iotexapi.NewAPIServiceClient(c.grpcConn)
 	count := uint64(2)
 	if parentHeight == uint64(height) {
 		count = 1
@@ -333,7 +335,7 @@ func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTe
 			},
 		},
 	}
-	resp, err := client.GetBlockMetas(ctx, request)
+	resp, err := c.client.GetBlockMetas(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -348,34 +350,61 @@ func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *IoTe
 		blk = resp.BlkMetas[0]
 		parentBlk = resp.BlkMetas[0]
 	}
-	ret = &IoTexBlock{
-		Height:       int64(blk.Height),
-		Hash:         blk.Hash,
-		Timestamp:    blk.Timestamp.Seconds * 1e3, // ms
-		ParentHeight: int64(parentHeight),
-		ParentHash:   parentBlk.Hash,
+	ret = &types.Block{
+		BlockIdentifier: &types.BlockIdentifier{
+			Index: int64(blk.Height),
+			Hash:  blk.Hash,
+		},
+		ParentBlockIdentifier: &types.BlockIdentifier{
+			Index: int64(parentHeight),
+			Hash:  parentBlk.Hash,
+		},
+		Timestamp: blk.Timestamp.Seconds * 1e3, // ms,
 	}
 	return
 }
 
-func (c *grpcIoTexClient) reconnect() (err error) {
-	c.Lock()
-	defer c.Unlock()
-	// Check if the existing connection is good.
-	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
+func (c *grpcIoTexClient) getRawBlock(ctx context.Context, height int64) (actionMap map[hash.Hash256]*iotextypes.Action, receiptMap map[hash.Hash256]*iotextypes.Receipt, hashSlice []hash.Hash256, err error) {
+	getRawBlocksRes, err := c.client.GetRawBlocks(ctx, &iotexapi.GetRawBlocksRequest{
+		StartHeight:  uint64(height),
+		Count:        1,
+		WithReceipts: true,
+	})
+	if err != nil || len(getRawBlocksRes.GetBlocks()) != 1 {
 		return
 	}
-	opts := []grpc.DialOption{}
-	if c.cfg.Server.SecureEndpoint {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-	} else {
-		opts = append(opts, grpc.WithInsecure())
+
+	actionMap = make(map[hash.Hash256]*iotextypes.Action)
+	receiptMap = make(map[hash.Hash256]*iotextypes.Receipt)
+	// hashSlice for fixed sequence,b/c map is unordered
+	hashSlice = make([]hash.Hash256, 0)
+	blk := getRawBlocksRes.GetBlocks()[0]
+	for _, act := range blk.GetBlock().GetBody().GetActions() {
+		proto, err := proto.Marshal(act)
+		if err != nil {
+			return
+		}
+		actionMap[hash.Hash256b(proto)] = act
+		hashSlice = append(hashSlice, hash.Hash256b(proto))
 	}
-	c.grpcConn, err = grpc.Dial(c.endpoint, opts...)
-	return err
+	for _, receipt := range blk.GetReceipts() {
+		receiptMap[hash.BytesToHash256(receipt.ActHash)] = receipt
+	}
+	return
 }
 
-func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt, client iotexapi.APIServiceClient) (ret *types.Transaction, err error) {
+func (c *grpcIoTexClient) getSystemLog(ctx context.Context, height int64) (hashToSystemLog map[string][]*iotextypes.ActionSystemLog_Transaction, err error) {
+	hashToSystemLog = make(map[string][]*iotextypes.ActionSystemLog_Transaction)
+	systemlog, err := c.client.GetSystemLogByBlockHeight(ctx, &iotexapi.GetSystemLogByBlockHeightRequest{BlockHeight: uint64(height)})
+	if err == nil && len(systemlog.GetBlockSystemLog().GetActionSystemLog()) != 0 {
+		for _, a := range systemlog.GetBlockSystemLog().GetActionSystemLog() {
+			hashToSystemLog[hex.EncodeToString(a.GetActionHash())] = a.GetTransactions()
+		}
+	}
+	return
+}
+
+func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Action, h string, receipt *iotextypes.Receipt, systemLog map[string][]*iotextypes.ActionSystemLog_Transaction) (ret *types.Transaction, err error) {
 	srcPub, err := crypto.BytesToPublicKey(act.GetSenderPubKey())
 	if err != nil {
 		return
@@ -389,110 +418,101 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 
-	if act.GetCore().GetExecution() != nil && status == StatusSuccess {
-		err = c.handleExecution(ctx, ret, act, h, client, callerAddr, status)
+	// handle execution action
+	if act.GetCore().GetExecution() != nil {
+		// get contract address generated of this action hash
+		err = c.handleExecution(ctx, ret, act, h, callerAddr, status, systemLog)
 		return
 	}
 
 	amount, senderSign, actionType, dst, err := assertAction(act)
-	if err != nil {
+	if err != nil || amount == "" || actionType == "" {
 		return
-	}
-	if amount == "" || actionType == "" {
-		return
-	}
-	senderAmountWithSign := amount
-	dstAmountWithSign := amount
-	if amount != "0" {
-		if senderSign == "-" {
-			senderAmountWithSign = senderSign + amount
-		} else {
-			dstAmountWithSign = "-" + amount
-		}
 	}
 
-	src := []*addressAmount{{address: callerAddr.String(), amount: senderAmountWithSign}}
-	var dstAll []*addressAmount
-	if dst != "" {
-		dstAll = []*addressAmount{{address: dst, amount: dstAmountWithSign}}
+	// handle general action that is not stake withdraw
+	if actionType != StakeWithdraw {
+		// for general action,if amount is 0 just return
+		err = c.handleGeneralAction(ret, callerAddr, amount, senderSign, actionType, dst, status)
+		return
 	}
-	err = c.packTransaction(ret, src, dstAll, actionType, status, 2)
+
+	// handle stake withdraw action
+	trans, ok := systemLog[h]
+	if !ok {
+		return nil, errors.New("stake withdraw action but have no systemlog")
+	}
+	err = c.handleSystemlog(ret, trans, StakeWithdraw, status, 2)
 	return
 }
 
-func (c *grpcIoTexClient) handleExecutionAmount(ctx context.Context, act *iotextypes.Action,
-	h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address) (src, dst []*addressAmount, err error) {
+func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, callerAddr address.Address, amount, senderSign, actionType, dst, status string) error {
+	if amount == "0" {
+		return nil
+	}
+	senderAmountWithSign := amount
+	dstAmountWithSign := amount
+	if senderSign == "-" {
+		senderAmountWithSign = senderSign + amount
+	} else {
+		dstAmountWithSign = "-" + amount
+	}
+
+	aal := addressAmountList{{callerAddr.String(), senderAmountWithSign}}
+	if dst != "" {
+		aal = append(aal, &addressAmount{dst, dstAmountWithSign})
+	}
+	return c.addOperation(ret, aal, actionType, status, 2)
+}
+
+func (c *grpcIoTexClient) handleExecutionAmount(act *iotextypes.Action,
+	contractAddr string, callerAddr address.Address) (aal addressAmountList, err error) {
 	amount := act.GetCore().GetExecution().GetAmount()
 	if amount == "0" {
 		return
 	}
 	// deal with pure transfer to contract address
-	src = []*addressAmount{{
-		address: callerAddr.String(),
-		amount:  "-" + act.GetCore().GetExecution().GetAmount(),
-	}}
-	// get contract address generated of this action hash
-	contractAddr := act.GetCore().GetExecution().GetContract()
-	if contractAddr == "" {
-		// need to get contract address generated of this action hash
-		responseReceipt, err := client.GetReceiptByAction(ctx, &iotexapi.GetReceiptByActionRequest{ActionHash: hex.EncodeToString(h[:])})
-		if err != nil {
-			return nil, nil, err
-		}
-		contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
-	}
-
-	dst = []*addressAmount{{
-		address: contractAddr,
-		amount:  act.GetCore().GetExecution().GetAmount(),
-	}}
+	aal = addressAmountList{{callerAddr.String(), "-" + amount}, {contractAddr, amount}}
 	return
 }
 
-func (c *grpcIoTexClient) handleExecutionSystemlog(ret *types.Transaction, transfers []*iotextypes.EvmTransfer, status string) (err error) {
-	src := []*addressAmount{}
-	dst := []*addressAmount{}
-	for _, transfer := range transfers {
-		amount := new(big.Int).SetBytes(transfer.Amount)
-		amountStr := amount.String()
-		if amount.Sign() != 0 {
-			amountStr = "-" + amount.String()
+func (c *grpcIoTexClient) handleSystemlog(ret *types.Transaction,
+	transaction []*iotextypes.ActionSystemLog_Transaction, actionType, status string, startIndex int64) (err error) {
+	var aal addressAmountList
+	for _, trans := range transaction {
+		amount := trans.GetAmount()
+		if amount == "0" {
+			continue
 		}
-		src = append(src, &addressAmount{
-			address: transfer.From,
-			amount:  amountStr,
-		})
-		dst = append(dst, &addressAmount{
-			address: transfer.To,
-			amount:  new(big.Int).SetBytes(transfer.Amount).String(),
-		})
+		aal = append(aal, addressAmountList{{trans.Sender, "-" + amount}, {trans.Recipient, amount}}...)
 	}
-	return c.packTransaction(ret, src, dst, Execution, status, 2)
+	return c.addOperation(ret, aal, actionType, status, startIndex)
 }
 
-func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h hash.Hash256, client iotexapi.APIServiceClient, callerAddr address.Address,
-	status string) (err error) {
-	src, dst, err := c.handleExecutionAmount(ctx, act, h, client, callerAddr)
-	if err != nil {
-		return
-	}
-	request := &iotexapi.GetEvmTransfersByActionHashRequest{
-		ActionHash: hex.EncodeToString(h[:]),
-	}
-	resp, err := client.GetEvmTransfersByActionHash(ctx, request)
-	if err != nil {
-		if errorStatus.Convert(err).Code() == codes.NotFound {
-			// TODO test this case,cannot differentiate systemlog indexer is bad or just this log is not exist
-			err = c.packTransaction(ret, src, dst, Execution, status, 2)
+func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h string, callerAddr address.Address, status string,
+	systemLog map[string][]*iotextypes.ActionSystemLog_Transaction) (err error) {
+	contractAddr := act.GetCore().GetExecution().GetContract()
+	if contractAddr == "" {
+		contractAddr, err = getContractAddress(ctx, h, c.client)
+		if err != nil {
 			return
 		}
-		return
 	}
-	// if there's systemlog,the above src->dst is included
-	return c.handleExecutionSystemlog(ret, resp.GetActionEvmTransfers().GetEvmTransfers(), status)
+	amount := act.GetCore().GetExecution().GetAmount()
+	// deal with pure transfer to contract address
+	var aal addressAmountList
+	if amount != "0" {
+		aal = addressAmountList{{callerAddr.String(), "-" + amount}, {contractAddr, amount}}
+	}
+
+	// if there's systemlog,the above aal is included
+	if trans, ok := systemLog[h]; ok {
+		return c.handleSystemlog(ret, trans, Execution, status, 2)
+	}
+	return c.addOperation(ret, aal, Execution, status, 2)
 }
 
-func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotextypes.Action, h hash.Hash256, receipt *iotextypes.Receipt) (ret *types.Transaction, status string, err error) {
+func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotextypes.Action, h string, receipt *iotextypes.Receipt) (ret *types.Transaction, status string, err error) {
 	status = StatusSuccess
 	if receipt.GetStatus() != 1 {
 		status = StatusFail
@@ -509,47 +529,16 @@ func (c *grpcIoTexClient) gasFeeAndStatus(callerAddr address.Address, act *iotex
 	if gasFee.Sign() == 1 {
 		amount = "-" + amount
 	}
-
-	sender := addressAmountList{{address: callerAddr.String(), amount: amount}}
-	receiptor := addressAmountList{{address: RewardingAddress, amount: gasFee.String()}}
-	var oper []*types.Operation
-	_, oper, err = c.addOperation(sender, ActionTypeFee, status, 0, oper)
-	if err != nil {
-		return
-	}
-	_, oper, err = c.addOperation(receiptor, ActionTypeFee, status, 1, oper)
-	if err != nil {
-		return
-	}
-	ret = &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			hex.EncodeToString(h[:]),
-		},
-		Operations: oper,
-		Metadata:   nil,
-	}
+	ret = &types.Transaction{TransactionIdentifier: &types.TransactionIdentifier{h}}
+	aal := addressAmountList{{callerAddr.String(), amount}, {RewardingAddress, gasFee.String()}}
+	err = c.addOperation(ret, aal, ActionTypeFee, status, 0)
 	return
 }
 
-func (c *grpcIoTexClient) packTransaction(ret *types.Transaction, src, dst addressAmountList, actionType, status string, startIndex int64) (err error) {
-	sort.Sort(src)
-	sort.Sort(dst)
-
+func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addressAmountList, actionType, status string, startIndex int64) error {
+	sort.Sort(amountList)
 	var oper []*types.Operation
-	endIndex, oper, err := c.addOperation(src, actionType, status, startIndex, oper)
-	if err != nil {
-		return
-	}
-	_, oper, err = c.addOperation(dst, actionType, status, endIndex, oper)
-	if err != nil {
-		return
-	}
-	ret.Operations = append(ret.Operations, oper...)
-	return
-}
-
-func (c *grpcIoTexClient) addOperation(l addressAmountList, actionType, status string, startIndex int64, oper []*types.Operation) (int64, []*types.Operation, error) {
-	for _, s := range l {
+	for _, s := range amountList {
 		oper = append(oper, &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index:        startIndex,
@@ -576,7 +565,8 @@ func (c *grpcIoTexClient) addOperation(l addressAmountList, actionType, status s
 		})
 		startIndex++
 	}
-	return startIndex, oper, nil
+	ret.Operations = append(ret.Operations, oper...)
+	return nil
 }
 
 func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst string, err error) {
@@ -607,12 +597,20 @@ func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst s
 	case act.GetCore().GetStakeWithdraw() != nil:
 		// TODO need to add amount when it's available on iotex-core
 		actionType = StakeWithdraw
-		senderSign = "+"
-		dst = StakingAddress
 	case act.GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
 		dst = StakingAddress
 	}
+	return
+}
+
+func getContractAddress(ctx context.Context, h string, client iotexapi.APIServiceClient) (contractAddr string, err error) {
+	// need to get contract address generated of this action hash
+	responseReceipt, err := client.GetReceiptByAction(ctx, &iotexapi.GetReceiptByActionRequest{ActionHash: h})
+	if err != nil {
+		return
+	}
+	contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
 	return
 }
