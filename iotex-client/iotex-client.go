@@ -241,10 +241,12 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	}
 	fmt.Println("242")
 	for _, h := range hashSlice {
+		fmt.Println("existTransferLog[h]", existTransferLog[h])
 		// already handled or is grantReward action
 		if existTransferLog[h] || actionMap[h].GetCore().GetGrantReward() != nil {
 			continue
 		}
+		fmt.Println("253")
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", h))
