@@ -246,7 +246,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		if existTransferLog[h] || actionMap[h].GetCore().GetGrantReward() != nil {
 			continue
 		}
-		fmt.Println("253")
+		fmt.Println("249")
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", h))
@@ -255,6 +255,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		fmt.Println("253")
 		decode, err := c.decodeAction(ctx, actionMap[h], h, r)
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		if decode != nil {
