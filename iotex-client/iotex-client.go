@@ -405,7 +405,7 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 			// handle gasFee first
 			trans, status, err := c.gasFeeAndStatus(actionMap[h], h, receiptMap[h])
 			if err != nil {
-				return
+				return ret, existTransferLog, err
 			}
 			var aal addressAmountList
 			for _, trans := range a.GetTransactions() {
