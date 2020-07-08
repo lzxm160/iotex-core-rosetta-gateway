@@ -239,7 +239,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-
+	fmt.Println("242")
 	for _, h := range hashSlice {
 		// already handled or is grantReward action
 		if existTransferLog[h] || actionMap[h].GetCore().GetGrantReward() != nil {
