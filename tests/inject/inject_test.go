@@ -216,6 +216,24 @@ func TestStakeWithdraw(t *testing.T) {
 	checkHash(resp.GetActionHash(), t)
 }
 
+func TestGetImplicitLog(t *testing.T) {
+	fmt.Println("TestGetImplicitLog")
+	require := require.New(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	for i := uint64(1); i < 120; i++ {
+		ret, err := c.API().GetImplicitTransferLogByBlockHeight(context.Background(),
+			&iotexapi.GetImplicitTransferLogByBlockHeightRequest{
+				BlockHeight: i})
+		require.NoError(err)
+		fmt.Println(i, ret.GetBlockImplicitTransferLog().GetNumTransactions())
+	}
+}
+
 func injectMultisend(t *testing.T) {
 	require := require.New(t)
 	contract := deployContract(t)
