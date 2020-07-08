@@ -12,8 +12,9 @@ import (
 
 type (
 	addressAmount struct {
-		address string
-		amount  string
+		address    string
+		amount     string
+		actionType string
 	}
 	addressAmountList []*addressAmount
 )
