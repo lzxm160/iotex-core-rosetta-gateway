@@ -13,7 +13,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"sort"
 	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -539,7 +538,7 @@ func (c *grpcIoTexClient) gasFeeAndStatus(act *iotextypes.Action, h string, rece
 }
 
 func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addressAmountList, status string, startIndex int64) error {
-	sort.Sort(amountList)
+	//sort.Sort(amountList)
 	var oper []*types.Operation
 	for _, s := range amountList {
 		oper = append(oper, &types.Operation{
