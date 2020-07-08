@@ -228,7 +228,8 @@ func TestGetImplicitLog(t *testing.T) {
 	acc, err := account.HexStringToAccount(privateKey)
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
-	for i := uint64(1); i < 220; i++ {
+	//for i := uint64(1); i < 220; i++ {
+	for i := uint64(1164); i < 1165; i++ {
 		ret, err := c.API().GetImplicitTransferLogByBlockHeight(context.Background(),
 			&iotexapi.GetImplicitTransferLogByBlockHeightRequest{
 				BlockHeight: i})
