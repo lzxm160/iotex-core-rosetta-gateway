@@ -294,6 +294,36 @@ func injectTransfer(t *testing.T) {
 	checkHash(hex.EncodeToString(hash[:]), t)
 }
 
+func TestInjectTransferUseExecution(t *testing.T) {
+	require := require.New(t)
+	contract := deployContract(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
+
+	execution, err := action.NewExecution(contract, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
+	require.NoError(err)
+	bd := &action.EnvelopeBuilder{}
+	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
+		SetGasPrice(gasPrice).
+		SetGasLimit(gasLimit).
+		SetAction(execution).Build()
+	selp, err := action.Sign(elp, acc.PrivateKey())
+	require.NoError(err)
+	ret, err := iotexapi.NewAPIServiceClient(conn).SendAction(context.Background(), &iotexapi.SendActionRequest{
+		Action: selp.Proto(),
+	})
+	require.NoError(err)
+	checkHash(ret.ActionHash, t)
+}
+
 func deployContract(t *testing.T) string {
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
