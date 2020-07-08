@@ -387,8 +387,10 @@ func (c *grpcIoTexClient) getRawBlock(ctx context.Context, height int64) (action
 		if err != nil {
 			return
 		}
-		actionMap[hex.EncodeToString(pro)] = act
-		hashSlice = append(hashSlice, hex.EncodeToString(pro))
+		hashArray := hash.Hash256b(pro)
+		h := hex.EncodeToString(hashArray[:])
+		actionMap[h] = act
+		hashSlice = append(hashSlice, h)
 	}
 	for _, receipt := range blk.GetReceipts() {
 		receiptMap[hex.EncodeToString(receipt.ActHash)] = receipt
