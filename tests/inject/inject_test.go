@@ -296,7 +296,6 @@ func injectTransfer(t *testing.T) {
 
 func TestInjectTransferUseExecution(t *testing.T) {
 	require := require.New(t)
-	contract := deployContract(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
@@ -308,7 +307,7 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 
-	execution, err := action.NewExecution(contract, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
+	execution, err := action.NewExecution(to, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
 	require.NoError(err)
 	bd := &action.EnvelopeBuilder{}
 	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
