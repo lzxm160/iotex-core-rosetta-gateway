@@ -13,7 +13,7 @@ GRN=$'\e[32;1m'
 OFF=$'\e[0m'
 
 ROSETTA_CLI_RELEASE=0.2.4
-IOTEX_SERVER_RELEASE=master
+IOTEX_SERVER_RELEASE=track
 
 #download
 printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_RELEASE}
@@ -21,7 +21,7 @@ printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_R
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
 #	wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
-wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/dustinxie/iotex-core/archive/track.tar.gz
+wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/dustinxie/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
 
 #build
 printf "${GRN}### Building rosetta-cli...${OFF}\n"
