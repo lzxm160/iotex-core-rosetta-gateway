@@ -250,6 +250,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", h))
 			return
 		}
+		fmt.Println("253")
 		decode, err := c.decodeAction(ctx, actionMap[h], h, r)
 		if err != nil {
 			return nil, err
