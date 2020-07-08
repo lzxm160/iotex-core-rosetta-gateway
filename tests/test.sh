@@ -20,7 +20,8 @@ printf "${GRN}### Downloading rosetta-cli release %s...${OFF}\n" ${ROSETTA_CLI_R
 	wget --quiet --show-progress --progress=bar:force:noscroll -O tests/rosetta-cli-${ROSETTA_CLI_RELEASE}.tar.gz https://github.com/coinbase/rosetta-cli/archive/v${ROSETTA_CLI_RELEASE}.tar.gz
 
 printf "${GRN}### Downloading iotex-core release ${IOTEX_SERVER_RELEASE}...${OFF}\n"
-	wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
+#	wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/iotexproject/iotex-core/archive/${IOTEX_SERVER_RELEASE}.tar.gz
+wget --quiet --show-progress --progress=bar:force:noscroll -O tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz https://github.com/dustinxie/iotex-core/archive/track.tar.gz
 
 #build
 printf "${GRN}### Building rosetta-cli...${OFF}\n"
@@ -68,6 +69,6 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
-rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./*.tar.gz
+#rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./*.tar.gz
 rm -rf ./config.json
 printf "${GRN}### Tests finished.${OFF}\n"
