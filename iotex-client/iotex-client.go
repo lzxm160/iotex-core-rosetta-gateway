@@ -604,9 +604,7 @@ func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst s
 		actionType = StakeCreate
 		amount = act.GetCore().GetStakeCreate().GetStakedAmount()
 		dst = StakingAddress
-	case act.GetCore().GetStakeWithdraw() != nil:
-		// TODO need to add amount when it's available on iotex-core
-		actionType = StakeWithdraw
+	//case stakewithdraw already handled before this call
 	case act.GetCore().GetCandidateRegister() != nil:
 		actionType = CandidateRegister
 		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
