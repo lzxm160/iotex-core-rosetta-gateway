@@ -7,6 +7,7 @@
 package inject
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -217,6 +218,8 @@ func TestStakeWithdraw(t *testing.T) {
 }
 
 func TestGetImplicitLog(t *testing.T) {
+	InContractTransfer := common.Hash{}
+	BucketWithdrawAmount := hash.BytesToHash256([]byte("withdrawAmount"))
 	fmt.Println("TestGetImplicitLog")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
@@ -230,10 +233,23 @@ func TestGetImplicitLog(t *testing.T) {
 			&iotexapi.GetImplicitTransferLogByBlockHeightRequest{
 				BlockHeight: i})
 		if err != nil {
-			fmt.Println(i, err)
+			//fmt.Println(i, err)
 			continue
 		}
-		fmt.Println(i, ret.GetBlockImplicitTransferLog().GetNumTransactions())
+		for _, trans := range ret.GetBlockImplicitTransferLog().GetImplicitTransferLog() {
+			for _, t := range trans.GetTransactions() {
+				switch {
+				case bytes.Compare(t.GetTopic(), InContractTransfer[:]) == 0:
+					fmt.Println(i, "execution", t.Recipient)
+				case bytes.Compare(t.GetTopic(), BucketWithdrawAmount[:]) == 0:
+					fmt.Println(i, "execution", t.Recipient)
+				default:
+					fmt.Println(i, "other")
+				}
+			}
+
+		}
+
 	}
 }
 
