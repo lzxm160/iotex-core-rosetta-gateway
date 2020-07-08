@@ -233,7 +233,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-
+	fmt.Println("getRawBlock")
 	// handle ImplicitTransferLog by height first,if log is not exist err will be nil
 	ret, existTransferLog, err := c.handleImplicitTransferLog(ctx, height, actionMap, receiptMap)
 	if err != nil {
