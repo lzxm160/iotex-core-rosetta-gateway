@@ -12,3 +12,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	google.golang.org/grpc v1.21.0
 )
+
+replace github.com/ethereum/go-ethereum => github.com/iotexproject/go-ethereum v0.3.0
