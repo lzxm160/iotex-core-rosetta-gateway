@@ -102,6 +102,14 @@ type (
 		GetConfig() *config.Config
 	}
 
+	// sort is not necessary,will add according the sequence from core
+	addressAmount struct {
+		address    string
+		amount     string
+		actionType string
+	}
+	addressAmountList []*addressAmount
+
 	// grpcIoTexClient is an implementation of IoTexClient using gRPC.
 	grpcIoTexClient struct {
 		sync.RWMutex
