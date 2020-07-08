@@ -455,7 +455,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 	// for general action that is not stake withdraw,if amount is 0 just return
-	err = c.handleGeneralAction(ret, amount, callerAddr.String(), senderSign, actionType, dst, status)
+	err = c.handleGeneralAction(ret, callerAddr.String(), amount, senderSign, actionType, dst, status)
 	return
 }
 
