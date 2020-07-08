@@ -74,7 +74,7 @@ func TestCandidateRegister(t *testing.T) {
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2,
 		"12001000000000000000000000",
-		7, true, nil, gasLimit, gasPrice)
+		7, false, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
 	bd := &action.EnvelopeBuilder{}
