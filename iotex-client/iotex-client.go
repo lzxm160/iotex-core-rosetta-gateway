@@ -421,7 +421,7 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 			ret = append(ret, trans)
 		}
 	}
-	return
+	return ret, existTransferLog, nil
 }
 
 func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Action, h string, receipt *iotextypes.Receipt) (ret *types.Transaction, err error) {
