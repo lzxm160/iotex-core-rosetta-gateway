@@ -140,8 +140,8 @@ func TestStakeAddDeposit(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender2})
 	require.NoError(err)
-	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 1, "1200100000000000000000000", nil, gasLimit, gasPrice)
+	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 2, "1200100000000000000000000", nil,
+		gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
 	bd := &action.EnvelopeBuilder{}
@@ -262,12 +262,11 @@ func TestGetImplicitLog(t *testing.T) {
 	acc, err := account.HexStringToAccount(privateKey)
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
-	for i := uint64(1); i < 220; i++ {
+	for i := uint64(1); i < 120; i++ {
 		ret, err := c.API().GetImplicitTransferLogByBlockHeight(context.Background(),
 			&iotexapi.GetImplicitTransferLogByBlockHeightRequest{
 				BlockHeight: i})
 		if err != nil {
-			fmt.Println(i, err)
 			continue
 		}
 		for _, trans := range ret.GetBlockImplicitTransferLog().GetImplicitTransferLog() {
