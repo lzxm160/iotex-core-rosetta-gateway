@@ -94,11 +94,11 @@ func TestCandidateRegister(t *testing.T) {
 
 func TestStakeCreate(t *testing.T) {
 	fmt.Println("inject stake create")
-	stakeCreate(t, privateKey)
-	stakeCreate(t, privateKey2)
+	stakeCreate(t, privateKey, sender)
+	stakeCreate(t, privateKey2, sender2)
 }
 
-func stakeCreate(t *testing.T, pri string) {
+func stakeCreate(t *testing.T, pri, addr string) {
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
@@ -107,7 +107,7 @@ func stakeCreate(t *testing.T, pri string) {
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
-		Address: sender})
+		Address: addr})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, false, nil, gasLimit, gasPrice)
@@ -138,7 +138,7 @@ func TestStakeAddDeposit(t *testing.T) {
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
-		Address: sender})
+		Address: sender2})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 1, "1200100000000000000000000", nil, gasLimit, gasPrice)
