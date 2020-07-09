@@ -94,11 +94,11 @@ func TestCandidateRegister(t *testing.T) {
 
 func TestStakeCreate(t *testing.T) {
 	fmt.Println("inject stake create")
-	stakeCreate(t, privateKey, sender)
-	stakeCreate(t, privateKey2, sender2)
+	stakeCreate(t, privateKey, sender, false)
+	stakeCreate(t, privateKey2, sender2, true)
 }
 
-func stakeCreate(t *testing.T, pri, addr string) {
+func stakeCreate(t *testing.T, pri, addr string, autostake bool) {
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
@@ -110,7 +110,7 @@ func stakeCreate(t *testing.T, pri, addr string) {
 		Address: addr})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, false, nil, gasLimit, gasPrice)
+	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, autostake, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(pri)
 	bd := &action.EnvelopeBuilder{}
@@ -233,7 +233,6 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 
 	execution, err := action.NewExecution(to, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
 	require.NoError(err)
