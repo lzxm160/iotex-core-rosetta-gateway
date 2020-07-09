@@ -415,6 +415,7 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 			if err != nil {
 				return ret, existTransferLog, err
 			}
+			fmt.Println(h, len(trans.Operations), len(a.Transactions))
 			var aal addressAmountList
 			for _, trans := range a.GetTransactions() {
 				amount := trans.GetAmount()
