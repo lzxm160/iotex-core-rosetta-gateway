@@ -37,7 +37,8 @@ const (
 	privateKey2 = "cfa6ef757dee2e50351620dca002d32b9c090cfda55fb81f37f1d26b273743f1"
 	to          = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt     = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
-	endpoint    = "127.0.0.1:14014"
+	//endpoint    = "127.0.0.1:14014"
+	endpoint = "34.70.180.73:14014"
 )
 
 var (
@@ -261,7 +262,7 @@ func TestGetImplicitLog(t *testing.T) {
 	acc, err := account.HexStringToAccount(privateKey)
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
-	for i := uint64(1); i < 120; i++ {
+	for i := uint64(94322); i < 94323; i++ {
 		ret, err := c.API().GetImplicitTransferLogByBlockHeight(context.Background(),
 			&iotexapi.GetImplicitTransferLogByBlockHeightRequest{
 				BlockHeight: i})
