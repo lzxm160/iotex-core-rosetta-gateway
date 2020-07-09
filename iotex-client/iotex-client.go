@@ -102,7 +102,7 @@ type (
 		GetConfig() *config.Config
 	}
 
-	// sort is not necessary,will add according the sequence from core
+	// sort is not necessary,add operation according the sequence from core
 	addressAmount struct {
 		address    string
 		amount     string
@@ -240,7 +240,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-	// handle ImplicitTransferLog by height first,if log is not exist err will be nil
+	// handle ImplicitTransferLog by height first,if log is not exist,the err will be nil
 	ret, existTransferLog, err := c.handleImplicitTransferLog(ctx, height, actionMap, receiptMap)
 	if err != nil {
 		return
@@ -437,7 +437,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 		return
 	}
 
-	// handle execution action
+	// handle execution action,this still need for in case of there's no implicit log
 	if act.GetCore().GetExecution() != nil {
 		// get contract address generated of this action hash
 		err = c.handleExecution(ctx, ret, act, h, status)
@@ -477,17 +477,6 @@ func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, callerAddr
 	return c.addOperation(ret, aal, status, 2)
 }
 
-//func (c *grpcIoTexClient) handleExecutionAmount(act *iotextypes.Action,
-//	contractAddr string, callerAddr address.Address) (aal addressAmountList, err error) {
-//	amount := act.GetCore().GetExecution().GetAmount()
-//	if amount == "0" {
-//		return
-//	}
-//	// deal with pure transfer to contract address
-//	aal = addressAmountList{{callerAddr.String(), "-" + amount, Execution}, {contractAddr, amount, Execution}}
-//	return
-//}
-
 func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h string, status string) (err error) {
 	callerAddr, err := getCaller(act)
 	if err != nil {
@@ -501,7 +490,6 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 		}
 	}
 	amount := act.GetCore().GetExecution().GetAmount()
-	// deal with pure transfer to contract address
 	var aal addressAmountList
 	if amount != "0" {
 		aal = addressAmountList{{callerAddr.String(), "-" + amount, Execution}, {contractAddr, amount, Execution}}
