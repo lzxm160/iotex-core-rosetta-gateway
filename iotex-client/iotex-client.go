@@ -240,32 +240,23 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-	fmt.Println("getRawBlock")
 	// handle ImplicitTransferLog by height first,if log is not exist err will be nil
 	ret, existTransferLog, err := c.handleImplicitTransferLog(ctx, height, actionMap, receiptMap)
 	if err != nil {
 		return
 	}
-	fmt.Println("242")
 	for _, h := range hashSlice {
-		fmt.Println("existTransferLog[h]", existTransferLog[h])
 		// already handled or is grantReward action
 		if existTransferLog[h] || actionMap[h].GetCore().GetGrantReward() != nil {
 			continue
-		}
-		fmt.Println("249", h)
-		for k, v := range receiptMap {
-			fmt.Println(k, v.Status)
 		}
 		r, ok := receiptMap[h]
 		if !ok {
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", h))
 			return
 		}
-		fmt.Println("253")
 		decode, err := c.decodeAction(ctx, actionMap[h], h, r)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		if decode != nil {
