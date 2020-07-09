@@ -94,11 +94,16 @@ func TestCandidateRegister(t *testing.T) {
 
 func TestStakeCreate(t *testing.T) {
 	fmt.Println("inject stake create")
+	stakeCreate(t, privateKey)
+	stakeCreate(t, privateKey2)
+}
+
+func stakeCreate(t *testing.T, pri string) {
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
-	acc, err := account.HexStringToAccount(privateKey)
+	acc, err := account.HexStringToAccount(pri)
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
@@ -107,7 +112,7 @@ func TestStakeCreate(t *testing.T) {
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, false, nil, gasLimit, gasPrice)
 	require.NoError(err)
-	sk, err := crypto.HexStringToPrivateKey(privateKey)
+	sk, err := crypto.HexStringToPrivateKey(pri)
 	bd := &action.EnvelopeBuilder{}
 	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
 		SetGasPrice(gasPrice).
@@ -129,7 +134,7 @@ func TestStakeAddDeposit(t *testing.T) {
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
-	acc, err := account.HexStringToAccount(privateKey)
+	acc, err := account.HexStringToAccount(privateKey2)
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
@@ -138,7 +143,7 @@ func TestStakeAddDeposit(t *testing.T) {
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 1, "1200100000000000000000000", nil, gasLimit, gasPrice)
 	require.NoError(err)
-	sk, err := crypto.HexStringToPrivateKey(privateKey)
+	sk, err := crypto.HexStringToPrivateKey(privateKey2)
 	bd := &action.EnvelopeBuilder{}
 	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
 		SetGasPrice(gasPrice).
