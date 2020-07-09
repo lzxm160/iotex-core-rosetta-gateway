@@ -273,9 +273,9 @@ func TestGetImplicitLog(t *testing.T) {
 			for _, t := range trans.GetTransactions() {
 				switch {
 				case bytes.Compare(t.GetTopic(), InContractTransfer[:]) == 0:
-					fmt.Println(i, "execution", t.Sender, t.Recipient, t.Amount)
+					fmt.Println(i, "execution", hex.EncodeToString(trans.ActionHash), t.Sender, t.Recipient, t.Amount)
 				case bytes.Compare(t.GetTopic(), BucketWithdrawAmount[:]) == 0:
-					fmt.Println(i, "stakewithdraw", t.Sender, t.Recipient, t.Amount)
+					fmt.Println(i, "stakewithdraw", hex.EncodeToString(trans.ActionHash), t.Sender, t.Recipient, t.Amount)
 				default:
 					fmt.Println(i, "other")
 				}
