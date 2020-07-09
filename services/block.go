@@ -44,7 +44,7 @@ func (s *blockAPIService) Block(
 			return nil, ErrMustQueryByIndex
 		}
 	}
-	fmt.Println("before s.client.GetBlock")
+	fmt.Println("before s.client.GetBlock", height)
 	tblk, err := s.client.GetBlock(ctx, height)
 	fmt.Println("after s.client.GetBlock", err)
 	if err != nil {
