@@ -8,6 +8,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -43,12 +44,14 @@ func (s *blockAPIService) Block(
 			return nil, ErrMustQueryByIndex
 		}
 	}
-
+	fmt.Println("before s.client.GetBlock")
 	tblk, err := s.client.GetBlock(ctx, height)
+	fmt.Println("after s.client.GetBlock", err)
 	if err != nil {
 		return nil, ErrUnableToGetBlk
 	}
 	tblk.Transactions, err = s.client.GetTransactions(ctx, height)
+	fmt.Println("after s.client.GetTransactions", err)
 	if err != nil {
 		return nil, ErrUnableToGetBlk
 	}
