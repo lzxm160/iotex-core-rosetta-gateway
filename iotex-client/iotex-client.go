@@ -241,13 +241,13 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		return
 	}
 	// handle ImplicitTransferLog by height first,if log is not exist,the err will be nil
-	ret, existTransferLog, err := c.handleImplicitTransferLog(ctx, height, actionMap, receiptMap)
+	transferLogMap, err := c.getImplicitTransferLog(ctx, height)
 	if err != nil {
 		return
 	}
 	for _, h := range hashSlice {
-		// already handled or is grantReward action
-		if existTransferLog[h] || actionMap[h].GetCore().GetGrantReward() != nil {
+		// grantReward action,gas fee and amount both 0
+		if actionMap[h].GetCore().GetGrantReward() != nil {
 			continue
 		}
 		r, ok := receiptMap[h]
@@ -255,7 +255,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			err = errors.New(fmt.Sprintf("failed find receipt:%s", h))
 			return
 		}
-		decode, err := c.decodeAction(ctx, actionMap[h], h, r, height)
+		decode, err := c.decodeAction(ctx, h, actionMap[h], r, transferLogMap[h], height)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +263,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			ret = append(ret, decode)
 		}
 	}
-	fileIndex(ret)
+	fillIndex(ret)
 	return
 }
 
@@ -397,10 +397,9 @@ func (c *grpcIoTexClient) getRawBlock(ctx context.Context, height int64) (action
 	return
 }
 
-func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height int64,
-	actionMap map[string]*iotextypes.Action, receiptMap map[string]*iotextypes.Receipt) (ret []*types.Transaction, existTransferLog map[string]bool, err error) {
-	ret = make([]*types.Transaction, 0)
-	existTransferLog = make(map[string]bool)
+func (c *grpcIoTexClient) getImplicitTransferLog(ctx context.Context, height int64) (
+	transferLogMap map[string][]*iotextypes.ImplicitTransferLog_Transaction, err error) {
+	transferLogMap = make(map[string][]*iotextypes.ImplicitTransferLog_Transaction)
 	transferLog, err := c.client.GetImplicitTransferLogByBlockHeight(
 		ctx,
 		&iotexapi.GetImplicitTransferLogByBlockHeightRequest{BlockHeight: uint64(height)},
@@ -409,31 +408,15 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 	if err == nil && transferLog.GetBlockImplicitTransferLog().GetNumTransactions() != 0 {
 		for _, a := range transferLog.GetBlockImplicitTransferLog().GetImplicitTransferLog() {
 			h := hex.EncodeToString(a.ActionHash)
-			existTransferLog[h] = true
-			// handle gasFee first
-			trans, status, err := c.gasFeeAndStatus(actionMap[h], h, receiptMap[h], height)
-			if err != nil {
-				return ret, existTransferLog, err
-			}
-			if receiptMap[h].Status == uint64(iotextypes.ReceiptStatus_Success) {
-				var aal addressAmountList
-				for _, t := range a.GetTransactions() {
-					amount := t.GetAmount()
-					if amount == "0" {
-						continue
-					}
-					actionType := getActionType(t.GetTopic())
-					aal = append(aal, addressAmountList{{t.Sender, "-" + amount, actionType}, {t.Recipient, amount, actionType}}...)
-				}
-				c.addOperation(trans, aal, status)
-			}
-			ret = append(ret, trans)
+			transferLogMap[h] = a.GetTransactions()
 		}
 	}
-	return ret, existTransferLog, nil
+	return transferLogMap, nil
 }
 
-func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Action, h string, receipt *iotextypes.Receipt, height int64) (ret *types.Transaction, err error) {
+func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotextypes.Action,
+	receipt *iotextypes.Receipt, transferLogs []*iotextypes.ImplicitTransferLog_Transaction,
+	height int64) (ret *types.Transaction, err error) {
 	ret, status, err := c.gasFeeAndStatus(act, h, receipt, height)
 	if err != nil {
 		return
@@ -441,6 +424,16 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, act *iotextypes.Acti
 	if receipt.Status != uint64(iotextypes.ReceiptStatus_Success) {
 		return
 	}
+	if transferLogs != nil {
+		// handle implicit transfer log first
+		for _, t := range transferLogs {
+			if err = c.handleGeneralAction(ret, t.GetSender(), t.GetAmount(), "-", getActionType(t.GetTopic()), t.GetRecipient(), status); err != nil {
+				return
+			}
+		}
+		return
+	}
+
 	// handle execution action,this still need for in case of there's no implicit log
 	if act.GetCore().GetExecution() != nil {
 		// get contract address generated of this action hash
@@ -630,7 +623,7 @@ func getActionType(topic []byte) string {
 	return ""
 }
 
-func fileIndex(ret []*types.Transaction) {
+func fillIndex(ret []*types.Transaction) {
 	for _, t := range ret {
 		for i, oper := range t.Operations {
 			oper.OperationIdentifier.Index = int64(i)
