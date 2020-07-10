@@ -307,6 +307,7 @@ func injectMultisend(t *testing.T) {
 	r1ethAddress := common.HexToAddress(hex.EncodeToString(r1.Bytes()))
 	r2ethAddress := common.HexToAddress(hex.EncodeToString(r2.Bytes()))
 	hash, err := c.Contract(contractAddr, abi).Execute("multiSend", []common.Address{r1ethAddress, r2ethAddress}, []*big.Int{big.NewInt(1), big.NewInt(2)}, "").SetGasPrice(gasPrice).SetGasLimit(gasLimit).SetAmount(big.NewInt(3)).Call(context.Background())
+
 	require.NoError(err)
 	require.NotNil(hash)
 	checkHash(hex.EncodeToString(hash[:]), t)
@@ -366,6 +367,10 @@ func checkHash(h string, t *testing.T) {
 	require.NoError(err)
 	c := iotex.NewReadOnlyClient(iotexapi.NewAPIServiceClient(conn))
 	receiptResponse, err := c.GetReceipt(ha).Call(context.Background())
-	s := receiptResponse.GetReceiptInfo().GetReceipt().GetStatus()
+	r := receiptResponse.GetReceiptInfo().GetReceipt()
+	s := r.GetStatus()
 	fmt.Println("status:", s)
+	gasConsumed := new(big.Int).SetUint64(r.GetGasConsumed())
+	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
+	fmt.Println("gasfee", gasFee)
 }
