@@ -39,8 +39,8 @@ const (
 	onlyForExecutionPrivate = "cc816a12c3fee40cadab02c1bce4ff4fe5abf754a9683e597838c72b967e67bb"
 	to                      = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt                 = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
-	//endpoint    = "127.0.0.1:14014"
-	endpoint = "34.70.180.73:14014"
+	endpoint                = "127.0.0.1:14014"
+	//endpoint = "34.70.180.73:14014"
 )
 
 var (
