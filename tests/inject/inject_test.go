@@ -370,7 +370,7 @@ func checkHash(h string, t *testing.T) {
 	s := r.GetStatus()
 	fmt.Println("status:", s)
 	gasConsumed := new(big.Int).SetUint64(r.GetGasConsumed())
-	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
+	gasFee := new(big.Int).Mul(gasPrice, gasConsumed)
 	fmt.Println("gasconsumed", gasConsumed)
 	fmt.Println("gasfee", gasFee)
 }
