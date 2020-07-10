@@ -110,6 +110,15 @@ type (
 	}
 	addressAmountList []*addressAmount
 
+	operation struct {
+		src        string
+		dst        string
+		amount     string
+		actionType string
+		isPositive bool
+	}
+	operationList []*operation
+
 	// grpcIoTexClient is an implementation of IoTexClient using gRPC.
 	grpcIoTexClient struct {
 		sync.RWMutex
@@ -240,7 +249,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 	if err != nil {
 		return
 	}
-	// handle ImplicitTransferLog by height first,if log is not exist,the err will be nil
+	// get ImplicitTransferLog by height,if log is not exist,the err will be nil
 	transferLogMap, err := c.getImplicitTransferLog(ctx, height)
 	if err != nil {
 		return
@@ -417,93 +426,100 @@ func (c *grpcIoTexClient) getImplicitTransferLog(ctx context.Context, height int
 func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotextypes.Action,
 	receipt *iotextypes.Receipt, transferLogs []*iotextypes.ImplicitTransferLog_Transaction,
 	height int64) (ret *types.Transaction, err error) {
-	ret, status, err := c.gasFeeAndStatus(act, h, receipt, height)
-	if err != nil {
-		return
-	}
-	if receipt.Status != uint64(iotextypes.ReceiptStatus_Success) {
-		return
-	}
-	if transferLogs != nil {
-		// handle implicit transfer log first
-		for _, t := range transferLogs {
-			if err = c.handleGeneralAction(ret, t.GetSender(), t.GetAmount(), "-", getActionType(t.GetTopic()), t.GetRecipient(), status); err != nil {
-				return
-			}
-		}
-		return
-	}
-
-	// handle execution action,this still need for in case of there's no implicit log
-	if act.GetCore().GetExecution() != nil {
-		// get contract address generated of this action hash
-		err = c.handleExecution(ctx, ret, act, h, status)
-		return
-	}
-
-	amount, senderSign, actionType, dst, err := assertAction(act)
-	if err != nil || amount == "" || actionType == "" {
-		return
-	}
+	ret = &types.Transaction{}
 	callerAddr, err := getCaller(act)
 	if err != nil {
 		return
 	}
-	// for general action that is not stake withdraw,if amount is 0 just return
-	err = c.handleGeneralAction(ret, callerAddr.String(), amount, senderSign, actionType, dst, status)
-	return
-}
-
-func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, callerAddr, amount, senderSign, actionType, dst, status string) error {
-	if amount == "0" {
-		return nil
-	}
-
-	senderAmountWithSign := amount
-	dstAmountWithSign := amount
-	if senderSign == "-" {
-		senderAmountWithSign = senderSign + amount
-	} else {
-		dstAmountWithSign = "-" + amount
-	}
-
-	aal := addressAmountList{{callerAddr, senderAmountWithSign, actionType}}
-	if dst != "" {
-		aal = append(aal, &addressAmount{dst, dstAmountWithSign, actionType})
-	}
-	return c.addOperation(ret, aal, status)
-}
-
-func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h string, status string) (err error) {
-	callerAddr, err := getCaller(act)
+	oper, err := c.getGasFee(act, receipt, height)
 	if err != nil {
 		return
 	}
-	contractAddr := act.GetCore().GetExecution().GetContract()
-	if contractAddr == "" {
-		contractAddr, err = getContractAddress(ctx, h, c.client)
+	oper.src = callerAddr.String()
+	operations := make(operationList, 0)
+	operations = append(operations, oper)
+
+	if receipt.Status == uint64(iotextypes.ReceiptStatus_Success) {
+		operations, err = c.getActions(ctx, act, h, transferLogs, operations)
 		if err != nil {
 			return
 		}
 	}
-	amount := act.GetCore().GetExecution().GetAmount()
-	var aal addressAmountList
-	if amount != "0" {
-		aal = addressAmountList{{callerAddr.String(), "-" + amount, Execution}, {contractAddr, amount, Execution}}
+	for _, oper := range operations {
+		err = c.handleGeneralAction(ret, oper, callerAddr.String())
+		if err != nil {
+			return
+		}
 	}
-	return c.addOperation(ret, aal, status)
+	return
 }
 
-func (c *grpcIoTexClient) gasFeeAndStatus(act *iotextypes.Action, h string, receipt *iotextypes.Receipt, height int64) (ret *types.Transaction, status string, err error) {
-	callerAddr, err := getCaller(act)
-	if err != nil {
-		return
+func (c *grpcIoTexClient) getActions(ctx context.Context, act *iotextypes.Action, h string,
+	transferLogs []*iotextypes.ImplicitTransferLog_Transaction, operations operationList) (operationList, error) {
+	if transferLogs != nil {
+		// handle implicit transfer log first
+		for _, t := range transferLogs {
+			operations = append(operations, &operation{
+				src:        t.GetSender(),
+				dst:        t.GetRecipient(),
+				amount:     t.GetAmount(),
+				actionType: getActionType(t.GetTopic()),
+				isPositive: false,
+			})
+		}
 	}
-	status = StatusSuccess
-	// for rosetta this should be success
-	//if receipt.GetStatus() != 1 {
-	//	status = StatusFail
-	//}
+
+	// get execution action operations,this is still needed for those in case of there're no implicit log
+	if act.GetCore().GetExecution() != nil && transferLogs == nil {
+		oper, err := c.getExecution(ctx, act, h)
+		if err != nil {
+			return operations, err
+		}
+		operations = append(operations, oper)
+	}
+	// get general action operations
+	operations = assertAction(act, operations)
+	return operations, nil
+}
+
+func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, oper *operation, caller string) error {
+	senderAmountWithSign := oper.amount
+	dstAmountWithSign := oper.amount
+	if oper.amount != "0" {
+		if !oper.isPositive {
+			senderAmountWithSign = "-" + senderAmountWithSign
+		} else {
+			dstAmountWithSign = "-" + dstAmountWithSign
+		}
+	}
+	if oper.src == "" {
+		oper.src = caller
+	}
+	aal := addressAmountList{{oper.src, senderAmountWithSign, oper.actionType}}
+	if oper.dst != "" {
+		aal = append(aal, &addressAmount{oper.dst, dstAmountWithSign, oper.actionType})
+	}
+	return c.addOperation(ret, aal, StatusSuccess)
+}
+
+func (c *grpcIoTexClient) getExecution(ctx context.Context, act *iotextypes.Action,
+	h string) (ret *operation, err error) {
+	ret = &operation{}
+	ret.dst = act.GetCore().GetExecution().GetContract()
+	if ret.dst == "" {
+		ret.dst, err = getContractAddress(ctx, h, c.client)
+		if err != nil {
+			return
+		}
+	}
+	ret.amount = act.GetCore().GetExecution().GetAmount()
+	ret.actionType = Execution
+	return
+}
+
+func (c *grpcIoTexClient) getGasFee(act *iotextypes.Action, receipt *iotextypes.Receipt,
+	height int64) (oper *operation, err error) {
+	oper = &operation{}
 	gasConsumed := new(big.Int).SetUint64(receipt.GetGasConsumed())
 	gasPrice, ok := new(big.Int).SetString(act.GetCore().GetGasPrice(), 10)
 	if !ok {
@@ -517,13 +533,9 @@ func (c *grpcIoTexClient) gasFeeAndStatus(act *iotextypes.Action, h string, rece
 		// and only one share go to reward address
 		amount = gasFee.Mul(gasFee, big.NewInt(2)).String()
 	}
-	// if gasFee is not 0
-	if gasFee.Sign() == 1 {
-		amount = "-" + amount
-	}
-	ret = &types.Transaction{TransactionIdentifier: &types.TransactionIdentifier{h}}
-	aal := addressAmountList{{callerAddr.String(), amount, ActionTypeFee}, {RewardingAddress, gasFee.String(), ActionTypeFee}}
-	err = c.addOperation(ret, aal, status)
+	oper.amount = amount
+	oper.actionType = ActionTypeFee
+	oper.dst = RewardingAddress
 	return
 }
 
@@ -558,38 +570,42 @@ func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addres
 	return nil
 }
 
-func assertAction(act *iotextypes.Action) (amount, senderSign, actionType, dst string, err error) {
-	amount = "0"
-	senderSign = "-"
+func assertAction(act *iotextypes.Action, operations operationList) operationList {
+	oper := &operation{}
+	oper.amount = "0"
 	switch {
 	case act.GetCore().GetTransfer() != nil:
-		actionType = Transfer
-		amount = act.GetCore().GetTransfer().GetAmount()
-		dst = act.GetCore().GetTransfer().GetRecipient()
+		oper.actionType = Transfer
+		oper.amount = act.GetCore().GetTransfer().GetAmount()
+		oper.dst = act.GetCore().GetTransfer().GetRecipient()
 	case act.GetCore().GetDepositToRewardingFund() != nil:
-		actionType = DepositToRewardingFund
-		amount = act.GetCore().GetDepositToRewardingFund().GetAmount()
-		dst = RewardingAddress
+		oper.actionType = DepositToRewardingFund
+		oper.amount = act.GetCore().GetDepositToRewardingFund().GetAmount()
+		oper.dst = RewardingAddress
 	case act.GetCore().GetClaimFromRewardingFund() != nil:
-		actionType = ClaimFromRewardingFund
-		amount = act.GetCore().GetClaimFromRewardingFund().GetAmount()
-		senderSign = "+"
-		dst = RewardingAddress
+		oper.actionType = ClaimFromRewardingFund
+		oper.amount = act.GetCore().GetClaimFromRewardingFund().GetAmount()
+		oper.isPositive = true
+		oper.dst = RewardingAddress
 	case act.GetCore().GetStakeAddDeposit() != nil:
-		actionType = StakeAddDeposit
-		amount = act.GetCore().GetStakeAddDeposit().GetAmount()
-		dst = StakingAddress
+		oper.actionType = StakeAddDeposit
+		oper.amount = act.GetCore().GetStakeAddDeposit().GetAmount()
+		oper.dst = StakingAddress
 	case act.GetCore().GetStakeCreate() != nil:
-		actionType = StakeCreate
-		amount = act.GetCore().GetStakeCreate().GetStakedAmount()
-		dst = StakingAddress
+		oper.actionType = StakeCreate
+		oper.amount = act.GetCore().GetStakeCreate().GetStakedAmount()
+		oper.dst = StakingAddress
 	//case stakewithdraw already handled before this call
 	case act.GetCore().GetCandidateRegister() != nil:
-		actionType = CandidateRegister
-		amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
-		dst = StakingAddress
+		oper.actionType = CandidateRegister
+		oper.amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
+		oper.dst = StakingAddress
 	}
-	return
+	if oper.amount != "0" && oper.actionType != "" {
+		operations = append(operations, oper)
+	}
+
+	return operations
 }
 
 func getContractAddress(ctx context.Context, h string, client iotexapi.APIServiceClient) (contractAddr string, err error) {
