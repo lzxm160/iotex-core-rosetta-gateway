@@ -75,8 +75,7 @@ func TestCandidateRegister(t *testing.T) {
 		Address: sender2})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2,
-		"12001000000000000000000000",
+	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2, "12001000",
 		7, false, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
@@ -113,7 +112,7 @@ func stakeCreate(t *testing.T, pri, addr string, autostake bool) {
 		Address: addr})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, autostake, nil, gasLimit, gasPrice)
+	cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100", 0, autostake, nil, gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(pri)
 	bd := &action.EnvelopeBuilder{}
@@ -143,7 +142,7 @@ func TestStakeAddDeposit(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender2})
 	require.NoError(err)
-	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 2, "1200100000000000000000000", nil,
+	cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 2, "1200100", nil,
 		gasLimit, gasPrice)
 	require.NoError(err)
 	sk, err := crypto.HexStringToPrivateKey(privateKey2)
@@ -372,5 +371,6 @@ func checkHash(h string, t *testing.T) {
 	fmt.Println("status:", s)
 	gasConsumed := new(big.Int).SetUint64(r.GetGasConsumed())
 	gasFee := gasPrice.Mul(gasPrice, gasConsumed)
+	fmt.Println("gasconsumed", gasConsumed)
 	fmt.Println("gasfee", gasFee)
 }
