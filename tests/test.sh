@@ -65,11 +65,11 @@ cd tests
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 #./rosetta-cli check --lookup-balance-by-block=false --end 111 --bootstrap-balances ./bootstrap_balances.json --block-concurrency 8
 #./rosetta-cli check --lookup-balance-by-block=false log-balance-changes=true log-reconciliations=true --bootstrap-balances ./bootstrap_balances_mainnet.json
-./rosetta-cli check --lookup-balance-by-block=false --bootstrap-balances ./bootstrap_balances_mainnet.json --data-dir=./data --log-balance-changes=true --log-reconciliations=true --block-concurrency 4
+./rosetta-cli check --lookup-balance-by-block=false --bootstrap-balances ./bootstrap_balances.json --data-dir=./data --log-balance-changes=true --log-reconciliations=true --block-concurrency 4
 ./rosetta-cli view:account '{"address":"io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"}'
 ./rosetta-cli view:block 10
 rm -rf /tmp/rosetta-cli*
-
+sleep 100000000
 # Clean up after a successful run.
 rm -rf ./rosetta* ./iotex-core* ./*.db ./server ./*.tar.gz
 rm -rf ./config.json
