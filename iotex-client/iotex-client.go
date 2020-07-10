@@ -242,6 +242,7 @@ func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64)
 }
 
 func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (ret []*types.Transaction, err error) {
+	ret = make([]*types.Transaction, 0)
 	if err = c.connect(); err != nil {
 		return
 	}
