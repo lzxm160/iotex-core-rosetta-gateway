@@ -9,3 +9,4 @@ server:
   endpoint: 34.70.180.73:14014
   secureEndpoint: false
   rosettaVersion: 1.3.5
+PacificBlockHeight: 432001
