@@ -7,7 +7,6 @@
 package iotex_client
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/hex"
@@ -16,14 +15,12 @@ import (
 	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/iotexproject/go-pkgs/crypto"
 	"github.com/iotexproject/go-pkgs/hash"
 	"github.com/iotexproject/iotex-address/address"
 	"github.com/iotexproject/iotex-proto/golang/iotexapi"
@@ -251,7 +248,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 		return
 	}
 	// get ImplicitTransferLog by height,if log is not exist,the err will be nil
-	transferLogMap, err := c.getImplicitTransferLog(ctx, height)
+	transferLogMap, err := getImplicitTransferLog(ctx, height, c.client)
 	if err != nil {
 		return
 	}
@@ -407,23 +404,6 @@ func (c *grpcIoTexClient) getRawBlock(ctx context.Context, height int64) (action
 	return
 }
 
-func (c *grpcIoTexClient) getImplicitTransferLog(ctx context.Context, height int64) (
-	transferLogMap map[string][]*iotextypes.ImplicitTransferLog_Transaction, err error) {
-	transferLogMap = make(map[string][]*iotextypes.ImplicitTransferLog_Transaction)
-	transferLog, err := c.client.GetImplicitTransferLogByBlockHeight(
-		ctx,
-		&iotexapi.GetImplicitTransferLogByBlockHeightRequest{BlockHeight: uint64(height)},
-	)
-
-	if err == nil && transferLog.GetBlockImplicitTransferLog().GetNumTransactions() != 0 {
-		for _, a := range transferLog.GetBlockImplicitTransferLog().GetImplicitTransferLog() {
-			h := hex.EncodeToString(a.ActionHash)
-			transferLogMap[h] = a.GetTransactions()
-		}
-	}
-	return transferLogMap, nil
-}
-
 func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotextypes.Action,
 	receipt *iotextypes.Receipt, transferLogs []*iotextypes.ImplicitTransferLog_Transaction,
 	height int64) (ret *types.Transaction, err error) {
@@ -441,13 +421,13 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotex
 	operations = append(operations, oper)
 
 	if receipt.Status == uint64(iotextypes.ReceiptStatus_Success) {
-		operations, err = c.getActions(ctx, act, h, transferLogs, operations)
+		operations, err = c.prepareOperations(ctx, act, h, transferLogs, operations)
 		if err != nil {
 			return
 		}
 	}
 	for _, oper := range operations {
-		err = c.handleGeneralAction(ret, oper, callerAddr.String())
+		err = c.handleOperations(ret, oper, callerAddr.String())
 		if err != nil {
 			return
 		}
@@ -455,8 +435,7 @@ func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotex
 	return
 }
 
-func (c *grpcIoTexClient) getActions(ctx context.Context, act *iotextypes.Action, h string,
-	transferLogs []*iotextypes.ImplicitTransferLog_Transaction, operations operationList) (operationList, error) {
+func (c *grpcIoTexClient) prepareOperations(ctx context.Context, act *iotextypes.Action, h string, transferLogs []*iotextypes.ImplicitTransferLog_Transaction, operations operationList) (operationList, error) {
 	if transferLogs != nil {
 		// handle implicit transfer log first
 		for _, t := range transferLogs {
@@ -483,7 +462,7 @@ func (c *grpcIoTexClient) getActions(ctx context.Context, act *iotextypes.Action
 	return operations, nil
 }
 
-func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, oper *operation, caller string) error {
+func (c *grpcIoTexClient) handleOperations(ret *types.Transaction, oper *operation, caller string) error {
 	senderAmountWithSign := oper.amount
 	dstAmountWithSign := oper.amount
 	if oper.amount != "0" {
@@ -569,81 +548,4 @@ func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addres
 	}
 	ret.Operations = append(ret.Operations, oper...)
 	return nil
-}
-
-func assertAction(act *iotextypes.Action, operations operationList) operationList {
-	oper := &operation{}
-	oper.amount = "0"
-	switch {
-	case act.GetCore().GetTransfer() != nil:
-		oper.actionType = Transfer
-		oper.amount = act.GetCore().GetTransfer().GetAmount()
-		oper.dst = act.GetCore().GetTransfer().GetRecipient()
-	case act.GetCore().GetDepositToRewardingFund() != nil:
-		oper.actionType = DepositToRewardingFund
-		oper.amount = act.GetCore().GetDepositToRewardingFund().GetAmount()
-		oper.dst = RewardingAddress
-	case act.GetCore().GetClaimFromRewardingFund() != nil:
-		oper.actionType = ClaimFromRewardingFund
-		oper.amount = act.GetCore().GetClaimFromRewardingFund().GetAmount()
-		oper.isPositive = true
-		oper.dst = RewardingAddress
-	case act.GetCore().GetStakeAddDeposit() != nil:
-		oper.actionType = StakeAddDeposit
-		oper.amount = act.GetCore().GetStakeAddDeposit().GetAmount()
-		oper.dst = StakingAddress
-	case act.GetCore().GetStakeCreate() != nil:
-		oper.actionType = StakeCreate
-		oper.amount = act.GetCore().GetStakeCreate().GetStakedAmount()
-		oper.dst = StakingAddress
-	//case stakewithdraw already handled before this call
-	case act.GetCore().GetCandidateRegister() != nil:
-		oper.actionType = CandidateRegister
-		oper.amount = act.GetCore().GetCandidateRegister().GetStakedAmount()
-		oper.dst = StakingAddress
-	}
-	if oper.amount != "0" && oper.actionType != "" {
-		operations = append(operations, oper)
-	}
-
-	return operations
-}
-
-func getContractAddress(ctx context.Context, h string, client iotexapi.APIServiceClient) (contractAddr string, err error) {
-	// need to get contract address generated of this action hash
-	responseReceipt, err := client.GetReceiptByAction(ctx, &iotexapi.GetReceiptByActionRequest{ActionHash: h})
-	if err != nil {
-		return
-	}
-	contractAddr = responseReceipt.GetReceiptInfo().GetReceipt().GetContractAddress()
-	return
-}
-
-func getCaller(act *iotextypes.Action) (callerAddr address.Address, err error) {
-	srcPub, err := crypto.BytesToPublicKey(act.GetSenderPubKey())
-	if err != nil {
-		return
-	}
-	callerAddr, err = address.FromBytes(srcPub.Hash())
-	return
-}
-
-func getActionType(topic []byte) string {
-	InContractTransfer := common.Hash{}
-	BucketWithdrawAmount := hash.BytesToHash256([]byte("withdrawAmount"))
-	switch {
-	case bytes.Compare(topic, InContractTransfer[:]) == 0:
-		return Execution
-	case bytes.Compare(topic, BucketWithdrawAmount[:]) == 0:
-		return StakeWithdraw
-	}
-	return ""
-}
-
-func fillIndex(ret []*types.Transaction) {
-	for _, t := range ret {
-		for i, oper := range t.Operations {
-			oper.OperationIdentifier.Index = int64(i)
-		}
-	}
 }
