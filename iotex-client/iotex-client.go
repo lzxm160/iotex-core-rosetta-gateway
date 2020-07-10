@@ -263,6 +263,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			ret = append(ret, decode)
 		}
 	}
+	fileIndex(ret)
 	return
 }
 
@@ -404,7 +405,7 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 		ctx,
 		&iotexapi.GetImplicitTransferLogByBlockHeightRequest{BlockHeight: uint64(height)},
 	)
-	startIndex := int64(2)
+
 	if err == nil && transferLog.GetBlockImplicitTransferLog().GetNumTransactions() != 0 {
 		for _, a := range transferLog.GetBlockImplicitTransferLog().GetImplicitTransferLog() {
 			h := hex.EncodeToString(a.ActionHash)
@@ -424,7 +425,7 @@ func (c *grpcIoTexClient) handleImplicitTransferLog(ctx context.Context, height 
 					actionType := getActionType(t.GetTopic())
 					aal = append(aal, addressAmountList{{t.Sender, "-" + amount, actionType}, {t.Recipient, amount, actionType}}...)
 				}
-				c.addOperation(trans, aal, status, startIndex)
+				c.addOperation(trans, aal, status)
 			}
 			ret = append(ret, trans)
 		}
@@ -477,7 +478,7 @@ func (c *grpcIoTexClient) handleGeneralAction(ret *types.Transaction, callerAddr
 	if dst != "" {
 		aal = append(aal, &addressAmount{dst, dstAmountWithSign, actionType})
 	}
-	return c.addOperation(ret, aal, status, 2)
+	return c.addOperation(ret, aal, status)
 }
 
 func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transaction, act *iotextypes.Action, h string, status string) (err error) {
@@ -497,7 +498,7 @@ func (c *grpcIoTexClient) handleExecution(ctx context.Context, ret *types.Transa
 	if amount != "0" {
 		aal = addressAmountList{{callerAddr.String(), "-" + amount, Execution}, {contractAddr, amount, Execution}}
 	}
-	return c.addOperation(ret, aal, status, 2)
+	return c.addOperation(ret, aal, status)
 }
 
 func (c *grpcIoTexClient) gasFeeAndStatus(act *iotextypes.Action, h string, receipt *iotextypes.Receipt, height int64) (ret *types.Transaction, status string, err error) {
@@ -529,17 +530,15 @@ func (c *grpcIoTexClient) gasFeeAndStatus(act *iotextypes.Action, h string, rece
 	}
 	ret = &types.Transaction{TransactionIdentifier: &types.TransactionIdentifier{h}}
 	aal := addressAmountList{{callerAddr.String(), amount, ActionTypeFee}, {RewardingAddress, gasFee.String(), ActionTypeFee}}
-	err = c.addOperation(ret, aal, status, 0)
+	err = c.addOperation(ret, aal, status)
 	return
 }
 
-func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addressAmountList, status string, startIndex int64) error {
-	//sort.Sort(amountList)
+func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addressAmountList, status string) error {
 	var oper []*types.Operation
 	for _, s := range amountList {
 		oper = append(oper, &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index:        startIndex,
 				NetworkIndex: nil,
 			},
 			RelatedOperations: nil,
@@ -561,7 +560,6 @@ func (c *grpcIoTexClient) addOperation(ret *types.Transaction, amountList addres
 			},
 			Metadata: nil,
 		})
-		startIndex++
 	}
 	ret.Operations = append(ret.Operations, oper...)
 	return nil
@@ -630,4 +628,12 @@ func getActionType(topic []byte) string {
 		return StakeWithdraw
 	}
 	return ""
+}
+
+func fileIndex(ret []*types.Transaction) {
+	for _, t := range ret {
+		for i, oper := range t.Operations {
+			oper.OperationIdentifier.Index = int64(i)
+		}
+	}
 }
