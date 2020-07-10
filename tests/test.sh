@@ -67,7 +67,7 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 #./rosetta-cli check --lookup-balance-by-block=false --bootstrap-balances ./bootstrap_balances_mainnet.json --exempt-accounts ./exempt_accounts_mainnet.json --data-dir=./ --log-balance-changes=true --log-reconciliations=true --block-concurrency 8
 ./rosetta-cli view:account '{"address":"io1ph0u2psnd7muq5xv9623rmxdsxc4uapxhzpg02"}'
 ./rosetta-cli view:block 10
-sleep 1000000000000
+
 rm -rf /tmp/rosetta-cli*
 
 # Clean up after a successful run.
