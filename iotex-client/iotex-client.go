@@ -427,7 +427,7 @@ func (c *grpcIoTexClient) getImplicitTransferLog(ctx context.Context, height int
 func (c *grpcIoTexClient) decodeAction(ctx context.Context, h string, act *iotextypes.Action,
 	receipt *iotextypes.Receipt, transferLogs []*iotextypes.ImplicitTransferLog_Transaction,
 	height int64) (ret *types.Transaction, err error) {
-	ret = &types.Transaction{}
+	ret = &types.Transaction{TransactionIdentifier: &types.TransactionIdentifier{h}}
 	callerAddr, err := getCaller(act)
 	if err != nil {
 		return
