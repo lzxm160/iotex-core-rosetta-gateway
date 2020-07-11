@@ -270,7 +270,7 @@ func (c *grpcIoTexClient) GetTransactions(ctx context.Context, height int64) (re
 			ret = append(ret, decode)
 		}
 	}
-	fillIndex(ret)
+	ret = fillIndex(ret)
 	return
 }
 
