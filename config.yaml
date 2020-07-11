@@ -10,3 +10,5 @@ server:
   secureEndpoint: false
   rosettaVersion: 1.3.5
 pacificBlockHeight: 432001
+keepGrantReward: true
+keepPutPollResult: true
