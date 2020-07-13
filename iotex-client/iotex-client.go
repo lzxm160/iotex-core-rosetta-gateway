@@ -174,10 +174,6 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 		return
 	}
 
-	if owner == RewardingAddress {
-		return c.getRewardingAccount(ctx, height)
-	}
-
 	request := &iotexapi.GetAccountRequest{Address: owner}
 	resp, err := c.client.GetAccount(ctx, request)
 	if err != nil {
@@ -198,42 +194,6 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 				Metadata: nil,
 			}}},
 		Metadata: &map[string]interface{}{NonceKey: acc.GetPendingNonce()},
-	}
-	return
-}
-
-func (c *grpcIoTexClient) getRewardingAccount(ctx context.Context, height int64) (ret *types.AccountBalanceResponse, err error) {
-	// call readState
-	out, err := c.client.ReadState(context.Background(), &iotexapi.ReadStateRequest{
-		ProtocolID: []byte(rewardingProtocolID),
-		MethodName: []byte(availableBalanceMethodID),
-		Arguments:  nil,
-	})
-	if err != nil {
-		return
-	}
-	val, ok := big.NewInt(0).SetString(string(out.Data), 10)
-	if !ok {
-		err = errors.New("balance convert error")
-		return
-	}
-	blk, err := c.getLatestBlock(ctx)
-	if err != nil {
-		return
-	}
-
-	ret = &types.AccountBalanceResponse{
-		BlockIdentifier: blk.BlockIdentifier,
-		Balances: []*types.Amount{{
-			Value: val.String(),
-			Currency: &types.Currency{
-				Symbol:   c.cfg.Currency.Symbol,
-				Decimals: c.cfg.Currency.Decimals,
-				Metadata: nil,
-			},
-		},
-		},
-		Metadata: &map[string]interface{}{NonceKey: 0},
 	}
 	return
 }
