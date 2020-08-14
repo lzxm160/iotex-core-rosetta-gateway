@@ -43,7 +43,7 @@ const (
 var (
 	gasPrice  = big.NewInt(0).SetUint64(1e12)
 	gasLimit  = uint64(10000000)
-	amount, _ = big.NewInt(0).SetString("1000000000000000000000", 10)
+	amount, _ = big.NewInt(0).SetString("1200100000000000000000000", 10)
 )
 
 func TestInjectTransfer(t *testing.T) {
