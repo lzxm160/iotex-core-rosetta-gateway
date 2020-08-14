@@ -45,6 +45,7 @@ cd tests
 printf "${GRN}### Starting the iotex server...${OFF}\n"
 GW="iotex-server -config-path=config_testnet.yaml -genesis-path=genesis_testnet.yaml -plugin=gateway"
 ${GW} &
+
 sleep 3
 cd ..
 go build -o /usr/local/bin/iotex-core-rosetta-gateway
@@ -52,6 +53,7 @@ go build -o /usr/local/bin/iotex-core-rosetta-gateway
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 GW="iotex-core-rosetta-gateway"
 ${GW} &
+
 sleep 3
 cd tests
 cd ../rosetta-cli-config
