@@ -39,19 +39,21 @@ printf "${GRN}### Building iotex-core...${OFF}\n"
 	tar -xf tests/iotex-core-${IOTEX_SERVER_RELEASE}.tar.gz -C tests
 	cd tests/iotex-core-${IOTEX_SERVER_RELEASE} && make build
 	cd ../..
-	cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server tests/iotex-server
+	cp tests/iotex-core-${IOTEX_SERVER_RELEASE}/bin/server /usr/local/bin/iotex-server
 
 cd tests
 printf "${GRN}### Starting the iotex server...${OFF}\n"
 GW="iotex-server -config-path=config_testnet.yaml -genesis-path=genesis_testnet.yaml -plugin=gateway"
 ${GW} &
 sleep 3
-cp ../iotex-core-rosetta-gateway .
+cd ..
+go build -o /usr/local/bin/iotex-core-rosetta-gateway
+
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 GW="iotex-core-rosetta-gateway"
 ${GW} &
 sleep 3
-
+cd tests
 cd ../rosetta-cli-config
 printf "${GRN}### Run rosetta-cli check...${OFF}\n"
 rosetta-cli check:data --configuration-file testing/iotex-testing.json &
