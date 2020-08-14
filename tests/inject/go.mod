@@ -14,3 +14,4 @@ require (
 )
 
 replace github.com/ethereum/go-ethereum => github.com/iotexproject/go-ethereum v0.3.0
+replace github.com/iotexproject/iotex-antenna-go/v2 => github.com/lzxm160/iotex-antenna-go/v2 v2.4.1
