@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"sync"
 
@@ -111,6 +112,7 @@ func (c *grpcIoTexClient) GetLatestBlock(ctx context.Context) (*types.Block, err
 func (c *grpcIoTexClient) getLatestBlock(ctx context.Context) (*types.Block, error) {
 	res, err := c.client.GetChainMeta(context.Background(), &iotexapi.GetChainMetaRequest{})
 	if err != nil {
+		fmt.Println("////////////getLatestBlock", err)
 		return nil, err
 	}
 	return c.getBlock(ctx, int64(res.ChainMeta.Height))
@@ -262,6 +264,7 @@ func (c *grpcIoTexClient) getBlock(ctx context.Context, height int64) (ret *type
 	}
 	resp, err := c.client.GetBlockMetas(ctx, request)
 	if err != nil {
+		fmt.Println("////////////GetBlockMetas", err, height)
 		return nil, err
 	}
 	if len(resp.BlkMetas) == 0 {
