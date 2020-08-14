@@ -41,8 +41,9 @@ const (
 )
 
 var (
-	gasPrice = big.NewInt(0).SetUint64(1e12)
-	gasLimit = uint64(10000000)
+	gasPrice  = big.NewInt(0).SetUint64(1e12)
+	gasLimit  = uint64(10000000)
+	amount, _ = big.NewInt(0).SetString("1000000000000000000000", 10)
 )
 
 func TestInjectTransfer(t *testing.T) {
@@ -73,7 +74,7 @@ func TestCandidateRegister(t *testing.T) {
 	require.NoError(err)
 	addr, err := address.FromString(sender2)
 	require.NoError(err)
-	h, err := c.Candidate().Register(addr, addr, addr, big.NewInt(0).SetUint64(1000000000000000000000),
+	h, err := c.Candidate().Register(addr, addr, addr, amount,
 		7, false).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	require.NoError(err)
@@ -116,7 +117,7 @@ func stakeCreate(t *testing.T, pri, addr string, autostake bool) {
 		Address: addr})
 	require.NoError(err)
 	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	h, err := c.Staking().Create("xxxx", big.NewInt(0).SetUint64(1000000000000000000000), 0, autostake).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
+	h, err := c.Staking().Create("xxxx", amount, 0, autostake).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	require.NoError(err)
 	checkHash(hex.EncodeToString(h[:]), t)
 	//cr, err := action.NewCreateStake(getacc.AccountMeta.PendingNonce, "xxxx", "1200100000000000000000000", 0, autostake, nil, gasLimit, gasPrice)
@@ -149,7 +150,7 @@ func TestStakeAddDeposit(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender2})
 	require.NoError(err)
-	h, err := c.Staking().AddDeposit(2, big.NewInt(0).SetUint64(1000000000000000000000)).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
+	h, err := c.Staking().AddDeposit(2, amount).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	require.NoError(err)
 	checkHash(hex.EncodeToString(h[:]), t)
 	//cr, err := action.NewDepositToStake(getacc.AccountMeta.PendingNonce, 2, "1200100000000000000000000", nil,
