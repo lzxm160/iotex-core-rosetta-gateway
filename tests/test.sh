@@ -49,7 +49,7 @@ ${GW} &
 sleep 3
 cd ..
 go build -o /usr/local/bin/iotex-core-rosetta-gateway
-
+export ConfigPath=tests/gateway_config.yaml
 printf "${GRN}### Starting the Rosetta gateway...${OFF}\n"
 GW="iotex-core-rosetta-gateway"
 ${GW} &
