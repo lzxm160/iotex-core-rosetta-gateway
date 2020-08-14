@@ -16,11 +16,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/iotexproject/iotex-core/action"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	"github.com/iotexproject/go-pkgs/crypto"
 	"github.com/iotexproject/go-pkgs/hash"
 	"github.com/iotexproject/iotex-address/address"
 	"github.com/iotexproject/iotex-antenna-go/v2/account"
@@ -72,31 +75,31 @@ func TestCandidateRegister(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender2})
 	require.NoError(err)
-	addr, err := address.FromString(sender2)
-	require.NoError(err)
-	h, err := c.Candidate().Register(addr, addr, addr, amount,
-		7, false).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
-	fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
-	require.NoError(err)
-	//cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2,
-	//	"12001000000000000000000000",
-	//	7, false, nil, gasLimit, gasPrice)
+	//addr, err := address.FromString(sender2)
 	//require.NoError(err)
-	//sk, err := crypto.HexStringToPrivateKey(privateKey2)
-	//bd := &action.EnvelopeBuilder{}
-	//elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
-	//	SetGasPrice(gasPrice).
-	//	SetGasLimit(gasLimit).
-	//	SetAction(cr).Build()
-	//selp, err := action.Sign(elp, sk)
+	//h, err := c.Candidate().Register(addr, addr, addr, amount,
+	//	7, false).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
+	//fmt.Println("nonce:", getacc.AccountMeta.PendingNonce)
 	//require.NoError(err)
-	//request := &iotexapi.SendActionRequest{Action: selp.Proto()}
+	//checkHash(hex.EncodeToString(h[:]), t)
+	cr, err := action.NewCandidateRegister(getacc.AccountMeta.PendingNonce, "xxxx", sender2, sender2, sender2,
+		"12001000000000000000000000",
+		7, false, nil, gasLimit, gasPrice)
+	require.NoError(err)
+	sk, err := crypto.HexStringToPrivateKey(privateKey2)
+	bd := &action.EnvelopeBuilder{}
+	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
+		SetGasPrice(gasPrice).
+		SetGasLimit(gasLimit).
+		SetAction(cr).Build()
+	selp, err := action.Sign(elp, sk)
+	require.NoError(err)
+	request := &iotexapi.SendActionRequest{Action: selp.Proto()}
 
-	//resp, err := c.API().SendAction(context.Background(), request)
-	//require.NoError(err)
-	//require.NotEmpty(resp.GetActionHash())
-	//checkHash(resp.GetActionHash(), t)
-	checkHash(hex.EncodeToString(h[:]), t)
+	resp, err := c.API().SendAction(context.Background(), request)
+	require.NoError(err)
+	require.NotEmpty(resp.GetActionHash())
+	checkHash(resp.GetActionHash(), t)
 }
 
 func TestStakeCreate(t *testing.T) {
