@@ -341,6 +341,45 @@ func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
 	fmt.Println(to, " to normal address after balance ", getContract.AccountMeta.Balance)
 }
 
+func TestInjectTransferToContract(t *testing.T) {
+	fmt.Println("TestInjectTransferToContract")
+	require := require.New(t)
+	contract := deployContract(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	contractAddress, err := address.FromString(contract)
+	require.NoError(err)
+
+	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println(sender, " TestInjectTransferToContract to contract address before balance ", getacc.AccountMeta.Balance)
+	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: contract})
+	require.NoError(err)
+	fmt.Println(contractAddress, " TestInjectTransferToContract to contract address before balance ", getContract.AccountMeta.Balance)
+
+	hash, err := c.Transfer(contractAddress, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
+	require.NoError(err)
+	require.NotNil(hash)
+	checkHash(hex.EncodeToString(hash[:]), t)
+
+	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println(sender, " TestInjectTransferToContract to contract address after balance ", getacc.AccountMeta.Balance)
+	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: contract})
+	require.NoError(err)
+	fmt.Println(contractAddress, " TestInjectTransferToContract to contract address after balance ", getContract.AccountMeta.Balance)
+}
+
 func TestGetImplicitLog(t *testing.T) {
 	InContractTransfer := common.Hash{}
 	BucketWithdrawAmount := hash.BytesToHash256([]byte("withdrawAmount"))
@@ -372,25 +411,6 @@ func TestGetImplicitLog(t *testing.T) {
 			}
 		}
 	}
-}
-
-func TestInjectTransferToContract(t *testing.T) {
-	fmt.Println("TestInjectTransferToContract")
-	require := require.New(t)
-	contract := deployContract(t)
-	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
-	require.NoError(err)
-	defer conn.Close()
-
-	acc, err := account.HexStringToAccount(privateKey)
-	require.NoError(err)
-	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
-	contractAddress, err := address.FromString(contract)
-	require.NoError(err)
-	hash, err := c.Transfer(contractAddress, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
-	require.NoError(err)
-	require.NotNil(hash)
-	checkHash(hex.EncodeToString(hash[:]), t)
 }
 
 func injectMultisend(t *testing.T) {
@@ -435,8 +455,6 @@ func injectTransfer(t *testing.T) {
 	require.NotNil(hash)
 	checkHash(hex.EncodeToString(hash[:]), t)
 }
-
-
 
 func deployContract(t *testing.T) string {
 	require := require.New(t)
