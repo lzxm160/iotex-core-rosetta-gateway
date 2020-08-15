@@ -37,14 +37,14 @@ const (
 	to                      = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt                 = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
 	endpoint                = "127.0.0.1:14014"
-	binxx                   = MultisendBin
-	abixx                   = MultisendABI
 )
 
 var (
 	gasPrice  = big.NewInt(0).SetUint64(1e12)
 	gasLimit  = uint64(10000000)
 	amount, _ = big.NewInt(0).SetString("1200100000000000000000000", 10)
+	binxx     = MultisendBinWithPayable
+	abixx     = MultisendABIWithPayable
 )
 
 //func TestInjectTransfer(t *testing.T) {
