@@ -243,7 +243,7 @@ func TestStakeWithdraw(t *testing.T) {
 }
 
 func TestInjectTransferToContractUseExecution(t *testing.T) {
-	fmt.Println("inject transfer use execution")
+	fmt.Println("inject transfer to contract use execution")
 	require := require.New(t)
 	contract := deployContract(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
@@ -255,11 +255,11 @@ func TestInjectTransferToContractUseExecution(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(sender, " before balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " contract before balance ", getacc.AccountMeta.Balance)
 	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: contract})
 	require.NoError(err)
-	fmt.Println(contract, " before balance ", getContract.AccountMeta.Balance)
+	fmt.Println(contract, " contract before balance ", getContract.AccountMeta.Balance)
 
 	//contractAddr, err := address.FromString(to)
 	//require.NoError(err)
@@ -285,15 +285,15 @@ func TestInjectTransferToContractUseExecution(t *testing.T) {
 	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(sender, " after balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " contract after balance ", getacc.AccountMeta.Balance)
 	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: contract})
 	require.NoError(err)
-	fmt.Println(contract, " after balance ", getContract.AccountMeta.Balance)
+	fmt.Println(contract, " contract after balance ", getContract.AccountMeta.Balance)
 }
 
 func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
-	fmt.Println("inject transfer use execution")
+	fmt.Println("inject transfer to normal address use execution")
 	require := require.New(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
@@ -304,11 +304,11 @@ func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(sender, " before balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " to normal address before balance ", getacc.AccountMeta.Balance)
 	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: to})
 	require.NoError(err)
-	fmt.Println(to, " before balance ", getContract.AccountMeta.Balance)
+	fmt.Println(to, " to normal address before balance ", getContract.AccountMeta.Balance)
 
 	//contractAddr, err := address.FromString(to)
 	//require.NoError(err)
@@ -334,11 +334,11 @@ func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
 	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(sender, " after balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " to normal address after balance ", getacc.AccountMeta.Balance)
 	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: to})
 	require.NoError(err)
-	fmt.Println(to, " after balance ", getContract.AccountMeta.Balance)
+	fmt.Println(to, " to normal address after balance ", getContract.AccountMeta.Balance)
 }
 
 func TestGetImplicitLog(t *testing.T) {
