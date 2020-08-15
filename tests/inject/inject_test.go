@@ -40,6 +40,8 @@ const (
 	to                      = "io1vdtfpzkwpyngzvx7u2mauepnzja7kd5rryp0sg"
 	receipt                 = "io1mflp9m6hcgm2qcghchsdqj3z3eccrnekx9p0ms"
 	endpoint                = "127.0.0.1:14014"
+	binxx                   = MultisendBin
+	abixx                   = MultisendABI
 )
 
 var (
@@ -422,7 +424,7 @@ func injectMultisend(t *testing.T) {
 
 	acc, err := account.HexStringToAccount(onlyForExecutionPrivate)
 	require.NoError(err)
-	abi, err := abi.JSON(strings.NewReader(MultisendABIWithPayable))
+	abi, err := abi.JSON(strings.NewReader(abixx))
 	require.NoError(err)
 	contractAddr, err := address.FromString(contract)
 	require.NoError(err)
@@ -466,7 +468,7 @@ func deployContract(t *testing.T) string {
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 
-	data, err := hex.DecodeString(MultisendBinWithPayable[2:])
+	data, err := hex.DecodeString(binxx[2:])
 	require.NoError(err)
 
 	hash, err := c.DeployContract(data).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
