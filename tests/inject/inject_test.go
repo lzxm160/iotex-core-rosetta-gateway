@@ -265,7 +265,7 @@ func TestInjectTransferToContractUseExecution(t *testing.T) {
 
 	//contractAddr, err := address.FromString(to)
 	//require.NoError(err)
-	//abi, err := abi.JSON(strings.NewReader(MultisendABI))
+	//abi, err := abi.JSON(strings.NewReader(abixx))
 	//require.NoError(err)
 	//h, err := c.Contract(contractAddr, abi).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	//require.NoError(err)
@@ -314,7 +314,7 @@ func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
 
 	//contractAddr, err := address.FromString(to)
 	//require.NoError(err)
-	//abi, err := abi.JSON(strings.NewReader(MultisendABI))
+	//abi, err := abi.JSON(strings.NewReader(abixx))
 	//require.NoError(err)
 	//h, err := c.Contract(contractAddr, abi).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	//require.NoError(err)
