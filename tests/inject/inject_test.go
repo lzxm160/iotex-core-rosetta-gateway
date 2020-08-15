@@ -383,7 +383,7 @@ func injectMultisend(t *testing.T) {
 
 	acc, err := account.HexStringToAccount(onlyForExecutionPrivate)
 	require.NoError(err)
-	abi, err := abi.JSON(strings.NewReader(MultisendABI))
+	abi, err := abi.JSON(strings.NewReader(MultisendABIWithPayable))
 	require.NoError(err)
 	contractAddr, err := address.FromString(contract)
 	require.NoError(err)
@@ -427,7 +427,7 @@ func deployContract(t *testing.T) string {
 	require.NoError(err)
 	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
 
-	data, err := hex.DecodeString(MultisendBin[2:])
+	data, err := hex.DecodeString(MultisendBinWithPayable[2:])
 	require.NoError(err)
 
 	hash, err := c.DeployContract(data).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
