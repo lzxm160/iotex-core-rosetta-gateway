@@ -242,7 +242,7 @@ func TestStakeWithdraw(t *testing.T) {
 	//checkHash(resp.GetActionHash(), t)
 }
 
-func TestInjectTransferUseExecution(t *testing.T) {
+func TestInjectTransferToContractUseExecution(t *testing.T) {
 	fmt.Println("inject transfer use execution")
 	require := require.New(t)
 	contract := deployContract(t)
@@ -255,7 +255,7 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(contract, " before balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " before balance ", getacc.AccountMeta.Balance)
 	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: contract})
 	require.NoError(err)
@@ -285,11 +285,60 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
-	fmt.Println(contract, " after balance ", getacc.AccountMeta.Balance)
+	fmt.Println(sender, " after balance ", getacc.AccountMeta.Balance)
 	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: contract})
 	require.NoError(err)
 	fmt.Println(contract, " after balance ", getContract.AccountMeta.Balance)
+}
+
+func TestInjectTransferToNormalAddressUseExecution(t *testing.T) {
+	fmt.Println("inject transfer use execution")
+	require := require.New(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println(sender, " before balance ", getacc.AccountMeta.Balance)
+	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: to})
+	require.NoError(err)
+	fmt.Println(to, " before balance ", getContract.AccountMeta.Balance)
+
+	//contractAddr, err := address.FromString(to)
+	//require.NoError(err)
+	//abi, err := abi.JSON(strings.NewReader(MultisendABI))
+	//require.NoError(err)
+	//h, err := c.Contract(contractAddr, abi).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
+	//require.NoError(err)
+	//checkHash(hex.EncodeToString(h[:]), t)
+	execution, err := action.NewExecution(to, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
+	require.NoError(err)
+	bd := &action.EnvelopeBuilder{}
+	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
+		SetGasPrice(gasPrice).
+		SetGasLimit(gasLimit).
+		SetAction(execution).Build()
+	selp, err := action.Sign(elp, acc.PrivateKey())
+	require.NoError(err)
+	ret, err := iotexapi.NewAPIServiceClient(conn).SendAction(context.Background(), &iotexapi.SendActionRequest{
+		Action: selp.Proto(),
+	})
+	require.NoError(err)
+	checkHash(ret.ActionHash, t)
+	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println(sender, " after balance ", getacc.AccountMeta.Balance)
+	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: to})
+	require.NoError(err)
+	fmt.Println(to, " after balance ", getContract.AccountMeta.Balance)
 }
 
 func TestGetImplicitLog(t *testing.T) {
