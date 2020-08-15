@@ -374,6 +374,25 @@ func TestGetImplicitLog(t *testing.T) {
 	}
 }
 
+func TestInjectTransferToContract(t *testing.T) {
+	fmt.Println("TestInjectTransferToContract")
+	require := require.New(t)
+	contract := deployContract(t)
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	require.NoError(err)
+	defer conn.Close()
+
+	acc, err := account.HexStringToAccount(privateKey)
+	require.NoError(err)
+	c := iotex.NewAuthedClient(iotexapi.NewAPIServiceClient(conn), acc)
+	contractAddress, err := address.FromString(contract)
+	require.NoError(err)
+	hash, err := c.Transfer(contractAddress, big.NewInt(0).SetUint64(1000)).SetGasPrice(gasPrice).SetGasLimit(gasLimit).Call(context.Background())
+	require.NoError(err)
+	require.NotNil(hash)
+	checkHash(hex.EncodeToString(hash[:]), t)
+}
+
 func injectMultisend(t *testing.T) {
 	require := require.New(t)
 	contract := deployContract(t)
@@ -416,6 +435,8 @@ func injectTransfer(t *testing.T) {
 	require.NotNil(hash)
 	checkHash(hex.EncodeToString(hash[:]), t)
 }
+
+
 
 func deployContract(t *testing.T) string {
 	require := require.New(t)
