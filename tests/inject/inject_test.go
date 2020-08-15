@@ -245,6 +245,7 @@ func TestStakeWithdraw(t *testing.T) {
 func TestInjectTransferUseExecution(t *testing.T) {
 	fmt.Println("inject transfer use execution")
 	require := require.New(t)
+	contract := deployContract(t)
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	require.NoError(err)
 	defer conn.Close()
@@ -254,6 +255,12 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	getacc, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
 		Address: sender})
 	require.NoError(err)
+	fmt.Println(contract, " before balance ", getacc.AccountMeta.Balance)
+	getContract, err := c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: contract})
+	require.NoError(err)
+	fmt.Println(contract, " before balance ", getContract.AccountMeta.Balance)
+
 	//contractAddr, err := address.FromString(to)
 	//require.NoError(err)
 	//abi, err := abi.JSON(strings.NewReader(MultisendABI))
@@ -261,7 +268,7 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	//h, err := c.Contract(contractAddr, abi).SetGasLimit(gasLimit).SetGasPrice(gasPrice).SetNonce(getacc.AccountMeta.PendingNonce).Call(context.Background())
 	//require.NoError(err)
 	//checkHash(hex.EncodeToString(h[:]), t)
-	execution, err := action.NewExecution(to, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
+	execution, err := action.NewExecution(contract, getacc.AccountMeta.PendingNonce, big.NewInt(111), gasLimit, gasPrice, nil)
 	require.NoError(err)
 	bd := &action.EnvelopeBuilder{}
 	elp := bd.SetNonce(getacc.AccountMeta.PendingNonce).
@@ -275,6 +282,14 @@ func TestInjectTransferUseExecution(t *testing.T) {
 	})
 	require.NoError(err)
 	checkHash(ret.ActionHash, t)
+	getacc, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: sender})
+	require.NoError(err)
+	fmt.Println(contract, " after balance ", getacc.AccountMeta.Balance)
+	getContract, err = c.API().GetAccount(context.Background(), &iotexapi.GetAccountRequest{
+		Address: contract})
+	require.NoError(err)
+	fmt.Println(contract, " after balance ", getContract.AccountMeta.Balance)
 }
 
 func TestGetImplicitLog(t *testing.T) {
