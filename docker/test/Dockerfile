@@ -1,5 +1,8 @@
 FROM golang:1.14-buster
 ENV GO111MODULE=on
+ENV http_proxy=socks5://192.168.1.7:1080
+RUN git config --global http.proxy 'socks5://192.168.1.7:1080'
+RUN git config --global https.proxy 'socks5://192.168.1.7:1080'
 
 ARG ROSETTA_CLI_RELEASE="0.4.1"
 RUN mkdir -p /usr/local/build-rosetta-cli && \
