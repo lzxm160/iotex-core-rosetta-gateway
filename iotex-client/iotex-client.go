@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"sync"
 
@@ -139,7 +140,7 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 		return
 	}
 
-	request := &iotexapi.GetAccountRequest{Address: owner}
+	request := &iotexapi.GetAccountRequest{Address: owner + fmt.Sprintf("%d", height)}
 	resp, err := c.client.GetAccount(ctx, request)
 	if err != nil {
 		return

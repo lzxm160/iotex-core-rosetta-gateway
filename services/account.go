@@ -36,7 +36,7 @@ func (s *accountAPIService) AccountBalance(
 		return nil, terr
 	}
 	// TODO fix this when we have archive mode
-	resp, err := s.client.GetAccount(ctx, 0, request.AccountIdentifier.Address)
+	resp, err := s.client.GetAccount(ctx, *request.BlockIdentifier.Index, request.AccountIdentifier.Address)
 	if err != nil {
 		return nil, ErrUnableToGetAccount
 	}
