@@ -28,7 +28,7 @@ const (
 // Rosetta service controllers.
 func NewBlockchainRouter(client ic.IoTexClient) (http.Handler, error) {
 	asserter, err := asserter.NewServer(services.SupportedOperationTypes(),
-		false,
+		true,
 		[]*types.NetworkIdentifier{
 			&types.NetworkIdentifier{
 				Blockchain: client.GetConfig().NetworkIdentifier.Blockchain,
