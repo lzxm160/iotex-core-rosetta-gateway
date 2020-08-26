@@ -20,14 +20,14 @@
   "ignore_reconciliation_error": false,
   "exempt_accounts": "",
   "bootstrap_balances": "./bootstrap_balances.json",
-  "historical_balance_disabled": true,
+  "historical_balance_disabled": false,
   "interesting_accounts": "./interesting_accounts.json",
   "reconciliation_disabled": false,
   "inactive_discrepency_search_disabled": false,
   "balance_tracking_disabled": false
  },
  "construction": {
-  "offline_url": "http://localhost:8080",
+  "offline_url": "http://35.200.17.194:8081",
   "currency": {
    "symbol": "IOTX",
    "decimals": 18
