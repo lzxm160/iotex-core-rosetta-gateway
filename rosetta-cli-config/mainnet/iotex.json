@@ -3,7 +3,7 @@
   "blockchain": "IoTeX",
   "network": "mainnet"
  },
- "online_url": "http://35.200.17.194:8081",
+ "online_url": "http://127.0.0.1:8081",
  "data_directory": "/var/data/rosetta-cli",
  "http_timeout": 10,
  "sync_concurrency": 50,
@@ -27,7 +27,7 @@
   "balance_tracking_disabled": false
  },
  "construction": {
-  "offline_url": "http://35.200.17.194:8081",
+  "offline_url": "http://127.0.0.1:8081",
   "currency": {
    "symbol": "IOTX",
    "decimals": 18
