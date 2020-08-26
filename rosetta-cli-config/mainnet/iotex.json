@@ -3,8 +3,8 @@
   "blockchain": "IoTeX",
   "network": "mainnet"
  },
- "online_url": "http://localhost:8080",
- "data_directory": "",
+ "online_url": "http://35.200.17.194:8081",
+ "data_directory": "/var/data/rosetta-cli",
  "http_timeout": 10,
  "sync_concurrency": 50,
  "transaction_concurrency": 16,
@@ -19,9 +19,9 @@
   "log_reconciliations": false,
   "ignore_reconciliation_error": false,
   "exempt_accounts": "",
-  "bootstrap_balances": "mainnet/bootstrap_balances.json",
+  "bootstrap_balances": "./bootstrap_balances.json",
   "historical_balance_disabled": true,
-  "interesting_accounts": "mainnet/interesting_accounts.json",
+  "interesting_accounts": "./interesting_accounts.json",
   "reconciliation_disabled": false,
   "inactive_discrepency_search_disabled": false,
   "balance_tracking_disabled": false
