@@ -8,7 +8,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -36,7 +35,6 @@ func (s *accountAPIService) AccountBalance(
 	if terr != nil {
 		return nil, terr
 	}
-	fmt.Println("xxx")
 	// TODO fix this when we have archive mode
 	resp, err := s.client.GetAccount(ctx, *request.BlockIdentifier.Index, request.AccountIdentifier.Address)
 	if err != nil {
