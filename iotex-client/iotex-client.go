@@ -139,9 +139,10 @@ func (c *grpcIoTexClient) GetAccount(ctx context.Context, height int64, owner st
 	if err = c.connect(); err != nil {
 		return
 	}
-
-	request := &iotexapi.GetAccountRequest{Address: owner + fmt.Sprintf("%d", height)}
+	oo := owner + fmt.Sprintf("%d", height)
+	request := &iotexapi.GetAccountRequest{Address: oo}
 	resp, err := c.client.GetAccount(ctx, request)
+	fmt.Println("GetAccount", oo, resp, err)
 	if err != nil {
 		return
 	}
