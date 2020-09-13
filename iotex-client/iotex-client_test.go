@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"testing"
@@ -372,4 +373,31 @@ func TestGrpcIoTexClient_GetConfig(t *testing.T) {
 	_, cli := newMockServer(t)
 	config := cli.GetConfig()
 	require.Equal(t, testConfig(), config)
+}
+
+func TestArchive(t *testing.T) {
+	require := require.New(t)
+	conf := &config.Config{
+		NetworkIdentifier: config.NetworkIdentifier{
+			Blockchain: "IoTeX",
+			Network:    "mainnet",
+		},
+		Currency: config.Currency{
+			Symbol:   "IOTX",
+			Decimals: 18,
+		},
+		Server: config.Server{
+			Port:           "8080",
+			Endpoint:       "35.200.17.194:14014",
+			SecureEndpoint: false,
+			RosettaVersion: "1.3.5",
+		},
+		KeepNoneTxAction: false,
+	}
+	cli, err := NewIoTexClient(conf)
+	require.NoError(err)
+	//io0000000000000000000000rewardingprotocol
+	res, err := cli.GetAccount(context.Background(), 3729962, "io000000000000000000000000stakingprotocol")
+	require.NoError(err)
+	fmt.Println(res.Balances[0].Value)
 }
